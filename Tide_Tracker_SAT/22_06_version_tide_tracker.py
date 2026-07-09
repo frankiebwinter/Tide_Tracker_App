@@ -1,3 +1,8 @@
+# TideTracker - a Streamlit app that reads tide-height and sunrise/sunset
+# data for 2026, then lets the user filter by activity (surf/swim), tide
+# height, time window, and daylight conditions to see which days match on
+# a calendar.
+
 import csv
 import os
 import calendar as calmod
@@ -23,8 +28,8 @@ YEARS = ["2026"]
 
 STAR = "\u2605"
 
-TIDE_FILE     = "Point-Lonsdale_60730_2026.csv"
-DAYLIGHT_FILE = "Aireys_Inlet_Sunrise_and_Sunset.csv"
+TIDE_FILE     = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Point-Lonsdale_60730_2026.csv")
+DAYLIGHT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Aireys_Inlet_Sunrise_and_Sunset.csv")
 
 
 def parse_date(date_str):
@@ -198,9 +203,8 @@ class UserCriteria:
             return MONTHS.index(name) + 1
         return None
 
-    # CHANGED: instead of reading customtkinter widgets off an `app` object,
-    # this reads plain values that the Streamlit widgets already gave us.
-    # Same conversions, same validation logic below is untouched.
+    # Copy the current widget values into this object, converting types
+    # and doing the safety checks above along the way.
     def read_from_values(self, activity, year_text, month_text, tide_min_text, tide_max_text,
                           time_from_text, time_to_text, is_sunrise, is_sunset,
                           is_after_sunrise, is_before_sunset):
@@ -290,10 +294,9 @@ class UserCriteria:
         self.is_before_sunset = data["is_before_sunset"]
         return True
 
-    # CHANGED: this is the direct Streamlit equivalent of your original
-    # populate_widgets(app) - instead of calling .set() on each ctk widget,
-    # it writes into st.session_state under the same key names the widgets
-    # use, which Streamlit widgets read as their value on the next rerun.
+    # Push the stored values back into the widgets by writing into
+    # st.session_state under the same keys the widgets use - Streamlit
+    # widgets pick up their value from session_state on the next rerun.
     def populate_widgets(self):
         st.session_state.current_activity = self.activity
         st.session_state.cmb_year = str(self.selected_year)
@@ -369,12 +372,13 @@ class ActivityFilter:
 
 
 # CLASS TideTrackerApp
-
+# The main app. Builds the two screens (criteria and calendar), holds the
+# program's shared state in st.session_state, and reacts to button presses.
 class TideTrackerApp:
     def __init__(self):
-        # state for the whole app - same fields as your original __init__,
-        # just stored in st.session_state so they survive Streamlit's reruns
-        # instead of living directly on self.
+        # state for the whole app, kept in st.session_state so it survives
+        # from one rerun to the next (Streamlit reruns the whole script on
+        # every interaction, so plain instance attributes would reset).
         defaults = {
             "current_activity": None,
             "current_screen": "criteria_screen",
@@ -391,8 +395,7 @@ class TideTrackerApp:
         self._tide_records = None
         self._daylight_records = None
 
-    # Raise whichever screen should be visible - same idea as your
-    # tkraise(), just flips which build_ method runs.
+    # Switch which screen is currently shown.
     def show_screen(self, screen_name):
         st.session_state.current_screen = screen_name
 
@@ -413,7 +416,7 @@ class TideTrackerApp:
         if row[1].button("Swim", use_container_width=True, type=swim_type):
             self.on_activity_select("swim")
 
-        # When card and Tide card, side by side like your two-column layout
+        # When card and Tide card, side by side
         when_col, tide_col = st.columns(2)
         with when_col:
             st.subheader("When")
@@ -446,15 +449,13 @@ class TideTrackerApp:
         if actions[2].button("Show calendar", use_container_width=True, type="primary"):
             self.on_show_calendar()
 
-    # Record the chosen activity - same job as your original, just writes
-    # to session_state instead of recolouring ctk buttons directly (the
-    # button colouring above reads current_activity back out on next draw).
+    # Record which activity is selected - the button colouring above reads
+    # current_activity back out on the next draw to show which is active.
     def on_activity_select(self, activity):
         st.session_state.current_activity = activity
 
-    # Same job as your original read_from_screen(app), just reading from
-    # st.session_state (where the widgets above store their values via
-    # their key=) instead of from ctk widget objects.
+    # Gather the current widget values from session_state and build a
+    # UserCriteria object from them.
     def _read_criteria_from_widgets(self):
         criteria = UserCriteria()
         criteria.read_from_values(
@@ -472,7 +473,7 @@ class TideTrackerApp:
         )
         return criteria
 
-    # Save criteria handler - identical logic to your original
+    # Save criteria handler - validates first, never saves invalid criteria
     def on_save_criteria(self):
         criteria = self._read_criteria_from_widgets()
         problems = criteria.validate()
@@ -481,7 +482,8 @@ class TideTrackerApp:
             return
         st.session_state.status_text = criteria.save()
 
-    # Load criteria handler - identical logic to your original
+    # Load criteria handler - loads the file for the chosen activity and
+    # fills the widgets with the saved values.
     def on_load_criteria(self):
         if st.session_state.current_activity is None:
             st.session_state.status_text = "Choose Surf or Swim first, then Load criteria."
@@ -495,7 +497,8 @@ class TideTrackerApp:
         else:
             st.session_state.status_text = "No saved criteria found for " + st.session_state.current_activity
 
-    # Load both data files once - identical logic to your original
+    # Load both data files once per run, so the large tide file isn't
+    # re-read on every button press. Returns True if both are available.
     def _load_sources(self):
         if self._tide_records is None:
             self._tide_records = load_tide_data(TIDE_FILE)
@@ -503,8 +506,9 @@ class TideTrackerApp:
             self._daylight_records = load_daylight_data(DAYLIGHT_FILE)
         return len(self._tide_records) > 0 and len(self._daylight_records) > 0
 
-    # The main flow when "Show calendar" is pressed - identical logic to
-    # your original on_show_calendar
+    # The main flow when "Show calendar" is pressed: validate the
+    # criteria, load and filter the data, then switch to the calendar
+    # screen.
     def on_show_calendar(self):
         criteria = self._read_criteria_from_widgets()
         problems = criteria.validate()
@@ -530,7 +534,7 @@ class TideTrackerApp:
             st.session_state.status_text = "No matching days for these criteria - try widening them."
 
         self.show_screen("calendar_screen")
-        st.rerun()   # switch screens immediately, same effect as your tkraise()
+        st.rerun()   # redraw immediately so the calendar screen shows right away
 
     # Build the calendar screen
     def build_calendar_screen(self):
@@ -551,9 +555,7 @@ class TideTrackerApp:
         self._render_calendar(criteria.selected_year, criteria.selected_month, match_days, af)
         self._build_legend()
 
-    # Draw the month grid from the filtered results - same nested loop
-    # structure as your original, just drawing into st.columns cells
-    # instead of a CTkFrame grid.
+    # Draw the month grid from the filtered results, week by week.
     def _render_calendar(self, year, month, match_days, af):
         cal = calmod.Calendar(firstweekday=0)
         for week in cal.monthdayscalendar(year, month):
@@ -570,10 +572,8 @@ class TideTrackerApp:
                 else:
                     self._draw_cell(row_cols[c], day, COLOUR_NO_MATCH, "X", "")
 
-    # Draw one calendar cell - same visual layout as your original CTkFrame
-    # cell (day number top-left, symbol centred, detail below), built as
-    # a bordered box (built-in Streamlit feature) and a coloured st.badge
-    # chip instead of a coloured <div> background.
+    # Draw one calendar cell: day number, a coloured badge showing the
+    # activity/status, and the matching tide detail underneath.
     def _draw_cell(self, column, day, colour, symbol, detail):
         with column.container(border=True):
             st.markdown(f"**{day}**")
@@ -589,8 +589,7 @@ class TideTrackerApp:
             if detail:
                 st.caption(detail)
 
-    # Draw the colour key - same items as your original, as badges instead
-    # of coloured HTML chips.
+    # Draw the colour key
     def _build_legend(self):
         st.write("")
         legend = st.columns(5)
@@ -600,8 +599,7 @@ class TideTrackerApp:
         legend[3].badge(STAR + " Ideal", color="orange")
         legend[4].badge("No match", color="gray")
 
-    # Run the app - same job as your mainloop(), decides which screen to
-    # draw on this rerun.
+    # Decide which screen to draw on this rerun.
     def run(self):
         if st.session_state.current_screen == "criteria_screen":
             self.build_criteria_screen()
@@ -609,8 +607,7 @@ class TideTrackerApp:
             self.build_calendar_screen()
 
 
-# create the app object and run it - direct equivalent of your
-# TideTrackerApp().mainloop()
+# create the app object and run it
 if __name__ == "__main__":
     st.set_page_config(page_title="TideTracker", layout="wide")
     TideTrackerApp().run()
