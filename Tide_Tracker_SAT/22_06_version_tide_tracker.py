@@ -145,7 +145,7 @@ import csv
 import os
 import calendar as calmod
 from datetime import datetime
-import customtkinter as ctk
+import streamlit as st
 import json
 
 # appearance settings from the customtkinter docs
@@ -628,191 +628,174 @@ class ActivityFilter:
 
 # CLASS TideTrackerApp
 # The main window
-# Inherits from customtkinter's CTk
-# It builds the two screens, holds the program's global/shared state, and reacts to the buttons
+# Inherits from Streamlit instead of CustomTkinter
+# draws the calendar as HTML instead of CTkFrame cells
 
-class TideTrackerApp(ctk.CTk):
+class TideTrackerApp:
     def __init__(self):
-        super().__init__()
-        self.title("TideTracker")
-        self.geometry("980x760")
-        self.minsize(860, 640)
-
-        # state the whole app
-        # act like global variables
-
-        self.current_activity = None     # str
-        self.active_criteria = None      # UserCriteria
-        self.current_match_days = None   # dict
-        self.active_filter = None        # ActivityFilter
-        self.current_screen = "criteria_screen"   # str
+        # state for whole app
+              # stored in st session_state because using Streamline
+              # added in some useful instructionary text for user 09/07
+              
+          defaults = {
+        "current_activity": None,     # str
+        "active_criteria": None,     # UserCriteria
+        "current_match_days": None,   # dict
+        "active_filter": None,        # ActivityFilter
+        "current_screen": "criteria_screen",   # str
+          "status_text": "Pick an activity, set your criteria, then Show calendar", 
+          }
+                    
+          for key, value in defaults.items()
+              if key not in st.session_state:
+                        st.session_state[key] = value
 
         #  loaded data so the large tide file is only read once
 
         self._tide_records = None        # list or None until loaded
         self._daylight_records = None    # list or None until loaded
 
-        self.container = ctk.CTkFrame(self, fg_color="transparent")
-        self.container.pack(fill="both", expand=True)
-        self.container.grid_rowconfigure(0, weight=1)
-        self.container.grid_columnconfigure(0, weight=1)
+# redundant sections when using Streamlit
 
-        self.criteria_screen = self.build_criteria_screen(self.container)
-        self.calendar_screen = self.build_calendar_screen(self.container)
-        self.criteria_screen.grid(row=0, column=0, sticky="nsew")
-        self.calendar_screen.grid(row=0, column=0, sticky="nsew")
-        self.show_screen("criteria_screen")
+        # self.container = ctk.CTkFrame(self, fg_color="transparent")
+        # self.container.pack(fill="both", expand=True)
+        # self.container.grid_rowconfigure(0, weight=1)
+        # self.container.grid_columnconfigure(0, weight=1)
+
+        # self.criteria_screen = self.build_criteria_screen(self.container)
+        # self.calendar_screen = self.build_calendar_screen(self.container)
+        # self.criteria_screen.grid(row=0, column=0, sticky="nsew")
+        # self.calendar_screen.grid(row=0, column=0, sticky="nsew")
+        # self.show_screen("criteria_screen")
 
     # Raise whichever screen should be visible.
     def show_screen(self, screen_name):
-        if screen_name == "criteria_screen":
-            self.criteria_screen.tkraise()
-        else:
-            self.calendar_screen.tkraise()
-        self.current_screen = screen_name
+              st.session_state.current_screen = screen_name 
 
-    # build a titled "card" frame for a group of controls
-    def _card(self, parent, title):
-        card = ctk.CTkFrame(parent, corner_radius=12)
-        ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=14, weight="bold")
-                     ).pack(anchor="w", padx=16, pady=(12, 4))
-        return card
+# Redundant when using Streamlit 
 
-    #  add a labelled drop-down to a card and return the combo box
-    def _combo(self, parent, label, values, default):
-        rowf = ctk.CTkFrame(parent, fg_color="transparent")
-        rowf.pack(fill="x", padx=16, pady=4)
-        ctk.CTkLabel(rowf, text=label, width=80, anchor="w").pack(side="left")
-        combo = ctk.CTkComboBox(rowf, values=values)
-        combo.set(default)
-        combo.pack(side="left", fill="x", expand=True)
-        return combo
+    # # build a titled "card" frame for a group of controls
+    # def _card(self, parent, title):
+    #     card = ctk.CTkFrame(parent, corner_radius=12)
+    #     ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=14, weight="bold")
+    #                  ).pack(anchor="w", padx=16, pady=(12, 4))
+    #     return card
+
+    # #  add a labelled drop-down to a card and return the combo box
+    # def _combo(self, parent, label, values, default):
+    #     rowf = ctk.CTkFrame(parent, fg_color="transparent")
+    #     rowf.pack(fill="x", padx=16, pady=4)
+    #     ctk.CTkLabel(rowf, text=label, width=80, anchor="w").pack(side="left")
+    #     combo = ctk.CTkComboBox(rowf, values=values)
+    #     combo.set(default)
+    #     combo.pack(side="left", fill="x", expand=True)
+    #     return combo
 
     # Build the criteria screen and all of its GUI controls
-    def build_criteria_screen(self, parent):
-        screen = ctk.CTkFrame(parent, fg_color="transparent")
+              
+    def build_criteria_screen(self):
+              header_col, status_col = st.columns([2, 3])
+              header_col.title("Tide Tracker")
+              status_col.write("")
+              status_col.caption(st.session_state.status_text)
 
-        header = ctk.CTkFrame(screen, height=70)
-        header.pack(fill="x")
-        ctk.CTkLabel(header, text="Tide Tracker", font=ctk.CTkFont(size=24, weight="bold")
-                     ).pack(side="left", padx=24, pady=16)
-        # lbl_ prefix marks a label control
-        # this one shows hints and validation messages
-        self.lbl_status = ctk.CTkLabel(header, text="Pick an activity, set your criteria, then Show calendar.",
-                                       text_color="#8b929c", font=ctk.CTkFont(size=13))
-        self.lbl_status.pack(side="left", pady=16)
+# Activity card with the two activity buttons 
+          st.subheader("Activity")
+          row = st.columns(2)
+          surf_type = "primary" if st_session_state.current_activity == "surf" else "secondary"
+          swim_type = "primary" if st_session_state.current_activity == "swim" else "secondary"
 
-        body = ctk.CTkFrame(screen, fg_color="transparent")
-        body.pack(fill="both", expand=True, padx=16, pady=16)
-        body.grid_columnconfigure((0, 1), weight=1)
+          if row[0].button("Surf", use_container_width=True, type=surf_type):
+                    self.on_activity_select("surf")
+          if row[1].button("Swim", use_container_width=True, type=swim_type):
+                    self.on_activity_select("swim")
 
-        # Activity card with the two activity buttons
-        activity = self._card(body, "Activity")
-        activity.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 14))
-        row = ctk.CTkFrame(activity, fg_color="transparent")
-        row.pack(fill="x", padx=16, pady=(0, 12))
-        self.btn_surf = ctk.CTkButton(row, text="Surf", height=46,
-                                      fg_color=COLOUR_INACTIVE, hover_color=COLOUR_SURF,
-                                      font=ctk.CTkFont(size=15, weight="bold"),
-                                      # command needs a function to call WHEN the button is clicked
-                                      # lambda makes a tiny no-name function that, when clicked, calls on_activity_select("surf")
-                                      # Writing on_activity_select("surf")
-                                      # lambda also lets me pass the "surf"/"swim" argument
-                                      command=lambda: self.on_activity_select("surf"))
+# When card and Tide card, side by side 
 
-        self.btn_swim = ctk.CTkButton(row, text="Swim", height=46,
-                                      fg_color=COLOUR_INACTIVE, hover_color=COLOUR_SWIM,
-                                      font=ctk.CTkFont(size=15, weight="bold"),
-                                      command=lambda: self.on_activity_select("swim"))
-        self.btn_surf.pack(side="left", expand=True, fill="x", padx=(0, 8))
-        self.btn_swim.pack(side="left", expand=True, fill="x", padx=(8, 0))
+          when_col, tide_col = st.columns(2)
+          with when_col:
+                    st.subheader("When")
+                    st.selectbox("Year", YEARS, key="cmb_year")
+                    st.selectbox("Month", MONTHS, index=2, key="cmb_month"_
+          with tide_col:
+                    st.subheader("Tide")
+                    st.selectbox("Minimum", TIDES, index=TIDES.index("0.8"), key="cmb_tide_min")
+                    st.selectbox("Maximum", TIDES, index=TIDES.index("1.6"), key="cmb_tide_max")
 
-        # When card, year and month combo boxes
-        when = self._card(body, "When")
-        when.grid(row=1, column=0, sticky="ew", padx=(0, 7), pady=(0, 14))
-        self.cmb_year = self._combo(when, "Year", YEARS, YEARS[0])
-        self.cmb_month = self._combo(when, "Month", MONTHS, "March")
-
-        # Tide card, minimum and maximum height combo boxes
-        tide = self._card(body, "Tide")
-        tide.grid(row=1, column=1, sticky="ew", padx=(7, 0), pady=(0, 14))
-        self.cmb_tide_min = self._combo(tide, "Minimum", TIDES, "0.8")
-        self.cmb_tide_max = self._combo(tide, "Maximum", TIDES, "1.6")
-
-        # Time window card
-        time_card = self._card(body, "Time window")
-        time_card.grid(row=2, column=0, sticky="ew", padx=(0, 7), pady=(0, 14))
-        self.cmb_time_from = self._combo(time_card, "From", TIMES, "06:00")
-        self.cmb_time_to = self._combo(time_card, "To", TIMES, "18:00")
-
-        # Daylight conditions card
-        # four checkboxes backed by BooleanVars
-        light = self._card(body, "Daylight conditions")
-        light.grid(row=2, column=1, sticky="ew", padx=(7, 0), pady=(0, 14))
-        self.var_sunrise = ctk.BooleanVar()
-        self.var_sunset = ctk.BooleanVar()
-        self.var_after_sunrise = ctk.BooleanVar()
-        self.var_before_sunset = ctk.BooleanVar()
-        # This loops over a list of pairs
-        # Each time round, Python unpacks the pair into text and var
-        # one CTkCheckBox is built per line without repeating the code
-        for text, var in [("At sunrise", self.var_sunrise),
-                          ("At sunset", self.var_sunset),
-                          ("After sunrise", self.var_after_sunrise),
-                          ("Before sunset", self.var_before_sunset)]:
-            ctk.CTkCheckBox(light, text=text, variable=var).pack(anchor="w", padx=16, pady=4)
-        ctk.CTkLabel(light, text="").pack(pady=2)
+        # Time window card and Daylight conditions card 
+        time_col, light_col = st.columns(2)
+          with time_col:
+                    st.subheader("Time window")
+                    st.selectbox("From", TIMES, index=TIMES.index("06:00"), key="cmb_time_from")
+                    st.selectbox("To", TIMES, index=TIMES.index("18:00"), key="cmb_time_to")
+          with light_col:
+                    st.subheader("Daylight conditions")
+                    st.checkbox("At sunrise", key="var_sunrise")
+                    st.checkbox ("At sunset", key="var_sunset")
+                    st.checkbox ("After sunrise", key="var_after_sunrise")
+                    st.checkbox ("Before sunset", key="var_before_sunset")
 
         # Action buttons
-        actions = ctk.CTkFrame(body, fg_color="transparent")
-        actions.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(4, 0))
-        actions.grid_columnconfigure((0, 1, 2), weight=1)
-        ctk.CTkButton(actions, text="Save criteria", height=44,
-                      fg_color="transparent", border_width=2,
-                      command=self.on_save_criteria).grid(row=0, column=0, sticky="ew", padx=4)
-        self.btn_load = ctk.CTkButton(actions, text="Load criteria", height=44,
-                                      fg_color="transparent", border_width=2,
-                                      command=self.on_load_criteria)
-        self.btn_load.grid(row=0, column=1, sticky="ew", padx=4)
-        ctk.CTkButton(actions, text="Show calendar", height=44,
-                      font=ctk.CTkFont(weight="bold"),
-                      command=self.on_show_calendar).grid(row=0, column=2, sticky="ew", padx=4)
-        return screen
+        actions = st.columns(3)
+          if actions[0].button("Save criteria", use_container_width=True):
+                    self.on_save_criteria()
+          if actions[1].button("Load criteria", use_container_width=True):
+                    self.on_load_criteria()
+          if actions[2].button("Show calendar", use_container_width=True, type="primary"):
+                    self.on_show_calendar
 
-# I haven't done the Save or load criteria part fully yet
-    # this is so its absence doesn't mess up the rest of my code when it runs
-    # def on_save_placeholder(self):
-    #     self.lbl_status.configure(text="Save criteria: not finished yet")
-    #
-    # def on_load_placeholder(self):
-    #     self.lbl_status.configure(text="Load criteria: not finished yet")
+# Record chosen activity 
+# to session_state instead of recolouring buttons directly 
+# button colouring above reads current_activity back out on next draw 
 
-        # Added on 22/06/26
-        # Save criteria handler, reads the screen, validates, then saves
+def on_activity_select(self, activity):
+          st.session_state.current_activity = activity 
 
+def _read_criteria_from_widgets(self):
+          criteria = UserCriteria()
+          criteria.read_from_values(
+          st.session_state.current_activity,
+            st.session_state.cmb_year,
+            st.session_state.cmb_month,
+            st.session_state.cmb_tide_min,
+            st.session_state.cmb_tide_max,
+            st.session_state.cmb_time_from,
+            st.session_state.cmb_time_to,
+            st.session_state.var_sunrise,
+            st.session_state.var_sunset,
+            st.session_state.var_after_sunrise,
+            st.session_state.var_before_sunset,
+        )
+        return criteria
+
+
+# Save criteria handler 
     def on_save_criteria(self):
-        criteria = UserCriteria()
-        criteria.read_from_screen(self)
-        problems = criteria.validate()  # never save invalid criteria
-        if problems:
-            self.lbl_status.configure(text="   ".join(problems))
-            return
-        self.lbl_status.configure(text=criteria.save())
+        criteria = self._read_criteria_from_widgets()
+          problems = criteria.validate()
+# never save invalid criteria
 
-        # Added on 22/06/26
-        # oad criteria handler, loads the file for the chosen activity and fills the screen
-    def on_load_criteria(self):
-        if self.current_activity is None:  # need an activity to know which file
-            self.lbl_status.configure(text="Choose Surf or Swim first, then Load criteria.")
+        if problems:
+            st.session_state.status_text = "   ".join(problems)
             return
+        st.session_state.status_text = criteria.save()
+
+# Load criteria handler 
+    def on_load_criteria(self):
+        if st.session_state.current_activity is None:  # need an activity to know which file
+            st.session_state.status_text = "Choose Surf or Swim first, then Load criteria."
+            return
+                  
         criteria = UserCriteria()
-        criteria.activity = self.current_activity
+        criteria.activity = st.session_state.current_activity 
         if criteria.load():  # load() returns True or False
-            criteria.populate_widgets(self)
-            self.active_criteria = criteria
-            self.lbl_status.configure(text="Criteria loaded for " + self.current_activity)
+            criteria.populate_widgets()
+            st.session_state.status_text = "Criteria loaded for " + st.session_state.current_activity
+
+          st.rerun() 
+# refresh so reloaded widget values show immediately 
         else:
-            self.lbl_status.configure(text="No saved criteria found for " + self.current_activity)
+            st.session_state.status_text "No saved criteria found for " + self.current_activity
 
     # Load both data files once
     # Returns True if both are available
@@ -826,21 +809,19 @@ class TideTrackerApp(ctk.CTk):
 
     # The main flow when "Show calendar" is pressed
     def on_show_calendar(self):
-        # read the criteria and convert types
-        criteria = UserCriteria()
-        criteria.read_from_screen(self)
+        criteria.read_criteria_from_widgets()
         # validate if there are problems, show them and stay on this screen
         problems = criteria.validate()
         if problems:
-            self.lbl_status.configure(text="   ".join(problems))
+            st.session_state.status_text="   ".join(problems)
             return
         # make sure the data files are present
         if not self._load_sources():
-            self.lbl_status.configure(
-                text="Could not read the data files, check the files")
+            st.session_state.status_text = "Could not read the data files, check the files"
+                  
             return
-        self.lbl_status.configure(text="")
-        self.active_criteria = criteria
+        st.session_state.status_text = ""
+        st.session_state.active_criteria = criteria
 
         # restrict to the chosen year, collate, then filter and rate
         year = criteria.selected_year
@@ -849,111 +830,93 @@ class TideTrackerApp(ctk.CTk):
         unified_data = collate_data(kept_tides, kept_daylight)
         af = ActivityFilter()
         match_days = af.filter_and_rate(unified_data, criteria)
-        self.active_filter = af
-        self.current_match_days = match_days
+        st.session_state.active_filter = af
+        st.session_state.current_match_days = match_days
 
         # completeness check, warning if no day matched
         if not match_days:
-            self.lbl_status.configure(text="No matching days for these criteria - try widening them.")
+            st.session_state.status_text="No matching days for these criteria - try widening them."
 
-        # draw the calendar and switch to it
-        self.lbl_month_title.configure(text=MONTHS[month - 1] + " " + str(year))
-        self._render_calendar(year, month, match_days, af)
-        self.show_screen("calendar_screen")
+          self.show_screen("calendar_screen")
+          st.rerun()
+          # switch screens immediately, same effect as tkraise()
 
     # Build the calendar screen
-    def build_calendar_screen(self, parent):
-        screen = ctk.CTkFrame(parent, fg_color="transparent")
+    def build_calendar_screen(self):
+          criteria = st.session_state.active_criteria
+          af = st.session_state.active_filter
+          match_days = st.session_state.current_match_days
 
-        topbar = ctk.CTkFrame(screen)
-        topbar.pack(fill="x", padx=20, pady=(16, 4))
-        self.lbl_month_title = ctk.CTkLabel(topbar, text="March 2026",
-                                            font=ctk.CTkFont(size=20, weight="bold"))
-        self.lbl_month_title.pack(side="left", padx=8)
-        ctk.CTkButton(topbar, text="Edit criteria", width=120,
-                      command=lambda: self.show_screen("criteria_screen")).pack(side="right", padx=8)
+          topbar = st.columns([4, 1])
+          topbar[0].subheader(MONTHS[criteria.selected_month - 1] + " " + str(criteria.selected_year))
+          if topbar[1].button("Edit criteria"):
+            self.show_screen("criteria_screen")
+            st.rerun()
 
-        head = ctk.CTkFrame(screen, fg_color="transparent")
-        head.pack(fill="x", padx=20, pady=(8, 4))
-        for i, weekday in enumerate(WEEKDAYS):    # iteration to build the 7 column headers
-            head.grid_columnconfigure(i, weight=1, uniform="day")
-            ctk.CTkLabel(head, text=weekday, text_color="#8b929c",
-                         font=ctk.CTkFont(size=12, weight="bold")).grid(row=0, column=i, sticky="ew")
+          head = st.colums(7)
+          for i, weekday in enumerate(WEEKDAYS):
+                    head[i].markdown(f"**{weekday}**")
 
-        self.calendar_frame = ctk.CTkFrame(screen, fg_color="transparent")
-        self.calendar_frame.pack(fill="both", expand=True, padx=20)
-
-        self._build_legend(screen)
-        return screen
+          self._render_calendar(criteria.selected_year, criteria.selected_month, match_days, af)
+          self._build_legend()
 
     # Draw the month grid from the filtered results
-    def _render_calendar(self, year, month, match_days, af):
-        for widget in self.calendar_frame.winfo_children():   # iteration: clear old cells
-            widget.destroy()
-        for i in range(7):
-            self.calendar_frame.grid_columnconfigure(i, weight=1, uniform="cell")
-        for i in range(6):
-            self.calendar_frame.grid_rowconfigure(i, weight=1, uniform="cellr")
+# using st.columns instead of CTKFrame grid 
 
-        cal = calmod.Calendar(firstweekday=0)   # weeks start on Monday
-        # monthdayscalendar gives the month as weeks
-        # a 0 means no day in the cell
-        # enumerate gives a counter with each item
-        # r is the week's row number, c is the column
-        # The outer loop walks down the weeks (rows), the inner loop walks across the 7 days (columns)
-        for r, week in enumerate(cal.monthdayscalendar(year, month)):     # nested iteration
+    def _render_calendar(self, year, month, match_days, af):
+        cal = calmod.Calendar(firstweekday=0)
+        for week in cal.monthdayscalendar(year, month):
+            row_cols = st.columns(7)
             for c, day in enumerate(week):
                 if day == 0:
-                    continue
-                date_str = "{:02d}/{:02d}/{}".format(day, month, year)
-                if date_str in match_days:                # selecting matched vs not matched
+                          continue 
+          date_str = "{:02d}/{:02d}/{}".format(day, month, year)
+                if date_str in match_days:
                     info = match_days[date_str]
                     colour, symbol = af.indicator_for(info)
                     detail = "{}m  {}".format(info["tide_height"], info["tide_time"])
-                    self._draw_cell(r, c, day, colour, symbol, detail)
+                    self._draw_cell(row_cols[c], day, colour, symbol, detail)
                 else:
-                    self._draw_cell(r, c, day, COLOUR_NO_MATCH, "X", "")
+                    self._draw_cell(row_cols[c], day, COLOUR_NO_MATCH, "X", "")
+ 
+    # Draw one calendar cell 
+def _draw_cell(self, column, day, colour, symbol, detail):
+with column.container(border=True):
+                     st.markdown(f"**{day}**")
+          if colour == COLOUR_NO_MATCH:
+                               st.badge("No match", colour="gray")
+          else:
+          activity_label = "Surf" if colour == COLOUR_SURF else "Swim"
+          badge_colour = "green" if colour == COLOUR_SURF else "blue"
+                if symbol:  # ideal day 
+                    st.badge(activity_label + " " + STAR, color="orange")
+                else:
+                    st.badge(activity_label, color=badge_colour)
+            if detail:
+                st.caption(detail)
 
-    # Draw one calendar cell
-    def _draw_cell(self, row, col, day, colour, symbol, detail):
-        cell = ctk.CTkFrame(self.calendar_frame, fg_color=colour, corner_radius=10)
-        cell.grid(row=row, column=col, sticky="nsew", padx=3, pady=3)
-        cell.grid_propagate(False)
-        ctk.CTkLabel(cell, text=str(day), text_color="white",
-                     font=ctk.CTkFont(size=14, weight="bold")).place(x=8, y=4)
-        if symbol:
-            ctk.CTkLabel(cell, text=symbol, text_color="white",
-                         font=ctk.CTkFont(size=22)).place(relx=0.5, rely=0.42, anchor="center")
-        if detail:
-            ctk.CTkLabel(cell, text=detail, text_color="white",
-                         font=ctk.CTkFont(size=10)).place(relx=0.5, rely=0.82, anchor="center")
+# Draw the colour key 
+# badges
 
-    # Draw the colour key
-    def _build_legend(self, parent):
-        legend = ctk.CTkFrame(parent, fg_color="transparent")
-        legend.pack(fill="x", padx=20, pady=12)
-        items = [(COLOUR_SURF, "Surf"), (COLOUR_SWIM, "Swim"),
-                 (COLOUR_BOTH, "Both"), (COLOUR_SURF, STAR + " Ideal"),
-                 (COLOUR_NO_MATCH, "X No match")]
-        for colour, label in items:           # iteration to build each legend part
-            chip = ctk.CTkFrame(legend, fg_color="transparent")
-            chip.pack(side="left", padx=10)
-            ctk.CTkLabel(chip, text="   ", fg_color=colour, corner_radius=4).pack(side="left", padx=(0, 6))
-            ctk.CTkLabel(chip, text=label, text_color="#c4c9d2").pack(side="left")
+def _build_legend(self):
+          st.write("")
+          legend = st.columns(5)
+          legend[0].badge("Surf", color="green"
+          legend[1].badge("Swim", color="blue")
+          legend[2].badge("Both", color="violet")
+          legend[3].badge(STAR + " Ideal", color="orange")
+          legend[4].badge("No match", color="gray")
 
-    # Record the chosen activity and recolour the buttons
-    def on_activity_select(self, activity):
-        self.current_activity = activity
-        if activity == "surf":
-            self.btn_surf.configure(fg_color=COLOUR_SURF)
-            self.btn_swim.configure(fg_color=COLOUR_INACTIVE)
-            self.btn_load.configure(fg_color=COLOUR_SURF)
-        else:
-            self.btn_swim.configure(fg_color=COLOUR_SWIM)
-            self.btn_surf.configure(fg_color=COLOUR_INACTIVE)
-            self.btn_load.configure(fg_color=COLOUR_SWIM)
+# Run app
+def run(self):
+          if st.session_state.current_screen == "criteria_screen":
+                    self.build_criteria_screen()
+          else:
+                    self.build_calendar_screen()
 
-#  create the app object and start the GUI event loop
+# create app object and run 
+
 if __name__ == "__main__":
-    TideTrackerApp().mainloop()
+          st.set_page_config(page_title ="TideTracker", layout="wide")
+TideTrackerApp().run()
 
