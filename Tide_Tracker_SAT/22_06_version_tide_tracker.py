@@ -1,11 +1,25 @@
 # TideTracker
 # a Streamlit app version of a school project that reads tide-height and sunrise/sunset
-# data for 2026, then lets the user filter by activity (surf/swim), tide
+# data for 2026, then lets the user filter by activity surf or swim, tide
 # height, time window, and daylight conditions to see which days match on
 # a calendar
 
 # Frankie-Belle Taylor 09/07/26
 # Dervived from previous versions of my TideTracker app project 
+
+# WHAT IT DOES
+# reads two data files, one with tide heights, one with sunrise and sunset times
+# lets the user pick an activity, surf or swim
+# lets the user set filters, a date, a tide height range, a time window, and daylight conditions
+# checks every day in the chosen month against those filters
+# shows a calendar where each day is marked as a match or not, with a star for the best days
+# lets the user save their filters to a file and load them back later
+
+# How the screen updates in Streamlit version
+# streamlit has no persistent window, it reruns this whole file top to bottom on every click
+# st.session_state is used to remember values between those reruns, such as which activity is picked
+# each widget, like a dropdown or checkbox, is given a key, and its value lives in st.session_state under that key
+# st.rerun() is called after certain actions to force an immediate redraw, such as switching screens
 
 import csv
 import os
