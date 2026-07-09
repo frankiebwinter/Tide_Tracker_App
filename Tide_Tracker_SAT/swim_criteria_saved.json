@@ -1,0 +1,13 @@
+{
+  "activity": "swim",
+  "selected_year": 2026,
+  "selected_month": 11,
+  "tide_min": 1.0,
+  "tide_max": 2.8,
+  "time_from": "05:00",
+  "time_to": "22:00",
+  "is_sunrise": false,
+  "is_sunset": true,
+  "is_after_sunrise": true,
+  "is_before_sunset": true
+}
