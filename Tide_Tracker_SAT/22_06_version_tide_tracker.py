@@ -625,136 +625,128 @@ class ActivityFilter:
         colour = COLOUR_SURF if self.criteria.activity == "surf" else COLOUR_SWIM
         symbol = STAR if info["is_ideal"] else ""
         return colour, symbol
-
-# CLASS TideTrackerApp
-# The main window
-# Inherits from Streamlit instead of CustomTkinter
-# draws the calendar as HTML instead of CTkFrame cells
-
 class TideTrackerApp:
     def __init__(self):
-        # state for whole app
-              # stored in st session_state because using Streamline
-              # added in some useful instructionary text for user 09/07
-              
-          defaults = {
-        "current_activity": None,     # str
-        "active_criteria": None,     # UserCriteria
-        "current_match_days": None,   # dict
-        "active_filter": None,        # ActivityFilter
-        "current_screen": "criteria_screen",   # str
-          "status_text": "Pick an activity, set your criteria, then Show calendar", 
-          }
-                    
-          for key, value in defaults.items():
-              if key not in st.session_state:
-                        st.session_state[key] = value
+        # State for whole app
+        defaults = {
+            "current_activity": None,
+            "active_criteria": None,
+            "current_match_days": None,
+            "active_filter": None,
+            "current_screen": "criteria_screen",
+            "status_text": "Pick an activity, set your criteria, then Show calendar",
+        }
 
-        #  loaded data so the large tide file is only read once
+        for key, value in defaults.items():
+            if key not in st.session_state:
+                st.session_state[key] = value
 
-        self._tide_records = None        # list or None until loaded
-        self._daylight_records = None    # list or None until loaded
+        # Loaded once
+        self._tide_records = None
+        self._daylight_records = None
 
-# redundant sections when using Streamlit
-
-        # self.container = ctk.CTkFrame(self, fg_color="transparent")
-        # self.container.pack(fill="both", expand=True)
-        # self.container.grid_rowconfigure(0, weight=1)
-        # self.container.grid_columnconfigure(0, weight=1)
-
-        # self.criteria_screen = self.build_criteria_screen(self.container)
-        # self.calendar_screen = self.build_calendar_screen(self.container)
-        # self.criteria_screen.grid(row=0, column=0, sticky="nsew")
-        # self.calendar_screen.grid(row=0, column=0, sticky="nsew")
-        # self.show_screen("criteria_screen")
-
-    # Raise whichever screen should be visible.
     def show_screen(self, screen_name):
-              st.session_state.current_screen = screen_name 
+        st.session_state.current_screen = screen_name
 
-# Redundant when using Streamlit 
-
-    # # build a titled "card" frame for a group of controls
-    # def _card(self, parent, title):
-    #     card = ctk.CTkFrame(parent, corner_radius=12)
-    #     ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=14, weight="bold")
-    #                  ).pack(anchor="w", padx=16, pady=(12, 4))
-    #     return card
-
-    # #  add a labelled drop-down to a card and return the combo box
-    # def _combo(self, parent, label, values, default):
-    #     rowf = ctk.CTkFrame(parent, fg_color="transparent")
-    #     rowf.pack(fill="x", padx=16, pady=4)
-    #     ctk.CTkLabel(rowf, text=label, width=80, anchor="w").pack(side="left")
-    #     combo = ctk.CTkComboBox(rowf, values=values)
-    #     combo.set(default)
-    #     combo.pack(side="left", fill="x", expand=True)
-    #     return combo
-
-    # Build the criteria screen and all of its GUI controls
-              
     def build_criteria_screen(self):
-              header_col, status_col = st.columns([2, 3])
-              header_col.title("Tide Tracker")
-              status_col.write("")
-              status_col.caption(st.session_state.status_text)
+        header_col, status_col = st.columns([2, 3])
+        header_col.title("Tide Tracker")
+        status_col.write("")
+        status_col.caption(st.session_state.status_text)
 
-# Activity card with the two activity buttons 
-          st.subheader("Activity")
-          row = st.columns(2)
-          surf_type = "primary" if st_session_state.current_activity == "surf" else "secondary"
-          swim_type = "primary" if st_session_state.current_activity == "swim" else "secondary"
+        # Activity
+        st.subheader("Activity")
+        row = st.columns(2)
 
-          if row[0].button("Surf", use_container_width=True, type=surf_type):
-                    self.on_activity_select("surf")
-          if row[1].button("Swim", use_container_width=True, type=swim_type):
-                    self.on_activity_select("swim")
+        surf_type = (
+            "primary"
+            if st.session_state.current_activity == "surf"
+            else "secondary"
+        )
+        swim_type = (
+            "primary"
+            if st.session_state.current_activity == "swim"
+            else "secondary"
+        )
 
-# When card and Tide card, side by side 
+        if row[0].button("Surf", use_container_width=True, type=surf_type):
+            self.on_activity_select("surf")
 
-          when_col, tide_col = st.columns(2)
-          with when_col:
-                    st.subheader("When")
-                    st.selectbox("Year", YEARS, key="cmb_year")
-                    st.selectbox("Month", MONTHS, index=2, key="cmb_month"_
-          with tide_col:
-                    st.subheader("Tide")
-                    st.selectbox("Minimum", TIDES, index=TIDES.index("0.8"), key="cmb_tide_min")
-                    st.selectbox("Maximum", TIDES, index=TIDES.index("1.6"), key="cmb_tide_max")
+        if row[1].button("Swim", use_container_width=True, type=swim_type):
+            self.on_activity_select("swim")
 
-        # Time window card and Daylight conditions card 
+        # When / Tide
+        when_col, tide_col = st.columns(2)
+
+        with when_col:
+            st.subheader("When")
+            st.selectbox("Year", YEARS, key="cmb_year")
+            st.selectbox("Month", MONTHS, index=2, key="cmb_month")
+
+        with tide_col:
+            st.subheader("Tide")
+            st.selectbox(
+                "Minimum",
+                TIDES,
+                index=TIDES.index("0.8"),
+                key="cmb_tide_min",
+            )
+            st.selectbox(
+                "Maximum",
+                TIDES,
+                index=TIDES.index("1.6"),
+                key="cmb_tide_max",
+            )
+
+        # Time / Daylight
         time_col, light_col = st.columns(2)
-          with time_col:
-                    st.subheader("Time window")
-                    st.selectbox("From", TIMES, index=TIMES.index("06:00"), key="cmb_time_from")
-                    st.selectbox("To", TIMES, index=TIMES.index("18:00"), key="cmb_time_to")
-          with light_col:
-                    st.subheader("Daylight conditions")
-                    st.checkbox("At sunrise", key="var_sunrise")
-                    st.checkbox ("At sunset", key="var_sunset")
-                    st.checkbox ("After sunrise", key="var_after_sunrise")
-                    st.checkbox ("Before sunset", key="var_before_sunset")
 
-        # Action buttons
+        with time_col:
+            st.subheader("Time window")
+            st.selectbox(
+                "From",
+                TIMES,
+                index=TIMES.index("06:00"),
+                key="cmb_time_from",
+            )
+            st.selectbox(
+                "To",
+                TIMES,
+                index=TIMES.index("18:00"),
+                key="cmb_time_to",
+            )
+
+        with light_col:
+            st.subheader("Daylight conditions")
+            st.checkbox("At sunrise", key="var_sunrise")
+            st.checkbox("At sunset", key="var_sunset")
+            st.checkbox("After sunrise", key="var_after_sunrise")
+            st.checkbox("Before sunset", key="var_before_sunset")
+
+        # Buttons
         actions = st.columns(3)
-          if actions[0].button("Save criteria", use_container_width=True):
-                    self.on_save_criteria()
-          if actions[1].button("Load criteria", use_container_width=True):
-                    self.on_load_criteria()
-          if actions[2].button("Show calendar", use_container_width=True, type="primary"):
-                    self.on_show_calendar
 
-# Record chosen activity 
-# to session_state instead of recolouring buttons directly 
-# button colouring above reads current_activity back out on next draw 
+        if actions[0].button("Save criteria", use_container_width=True):
+            self.on_save_criteria()
 
-def on_activity_select(self, activity):
-          st.session_state.current_activity = activity 
+        if actions[1].button("Load criteria", use_container_width=True):
+            self.on_load_criteria()
 
-def _read_criteria_from_widgets(self):
-          criteria = UserCriteria()
-          criteria.read_from_values(
-          st.session_state.current_activity,
+        if actions[2].button(
+            "Show calendar",
+            use_container_width=True,
+            type="primary",
+        ):
+            self.on_show_calendar()
+
+    def on_activity_select(self, activity):
+        st.session_state.current_activity = activity
+
+    def _read_criteria_from_widgets(self):
+        criteria = UserCriteria()
+
+        criteria.read_from_values(
+            st.session_state.current_activity,
             st.session_state.cmb_year,
             st.session_state.cmb_month,
             st.session_state.cmb_tide_min,
@@ -766,157 +758,218 @@ def _read_criteria_from_widgets(self):
             st.session_state.var_after_sunrise,
             st.session_state.var_before_sunset,
         )
+
         return criteria
 
-
-# Save criteria handler 
     def on_save_criteria(self):
         criteria = self._read_criteria_from_widgets()
-          problems = criteria.validate()
-# never save invalid criteria
+        problems = criteria.validate()
 
         if problems:
             st.session_state.status_text = "   ".join(problems)
             return
+
         st.session_state.status_text = criteria.save()
 
-# Load criteria handler 
     def on_load_criteria(self):
-        if st.session_state.current_activity is None:  # need an activity to know which file
-            st.session_state.status_text = "Choose Surf or Swim first, then Load criteria."
+        if st.session_state.current_activity is None:
+            st.session_state.status_text = (
+                "Choose Surf or Swim first, then Load criteria."
+            )
             return
-                  
+
         criteria = UserCriteria()
-        criteria.activity = st.session_state.current_activity 
-        if criteria.load():  # load() returns True or False
+        criteria.activity = st.session_state.current_activity
+
+        if criteria.load():
             criteria.populate_widgets()
-            st.session_state.status_text = "Criteria loaded for " + st.session_state.current_activity
-
-          st.rerun() 
-# refresh so reloaded widget values show immediately 
+            st.session_state.status_text = (
+                "Criteria loaded for "
+                + st.session_state.current_activity
+            )
+            st.rerun()
         else:
-            st.session_state.status_text "No saved criteria found for " + self.current_activity
+            st.session_state.status_text = (
+                "No saved criteria found for "
+                + st.session_state.current_activity
+            )
 
-    # Load both data files once
-    # Returns True if both are available
     def _load_sources(self):
         if self._tide_records is None:
             self._tide_records = load_tide_data(TIDE_FILE)
+
         if self._daylight_records is None:
             self._daylight_records = load_daylight_data(DAYLIGHT_FILE)
-        # existence check on the data sources
-        return len(self._tide_records) > 0 and len(self._daylight_records) > 0
 
-    # The main flow when "Show calendar" is pressed
+        return (
+            len(self._tide_records) > 0
+            and len(self._daylight_records) > 0
+        )
+
     def on_show_calendar(self):
-        criteria.read_criteria_from_widgets()
-        # validate if there are problems, show them and stay on this screen
+        criteria = self._read_criteria_from_widgets()
+
         problems = criteria.validate()
+
         if problems:
-            st.session_state.status_text="   ".join(problems)
+            st.session_state.status_text = "   ".join(problems)
             return
-        # make sure the data files are present
+
         if not self._load_sources():
-            st.session_state.status_text = "Could not read the data files, check the files"
-                  
+            st.session_state.status_text = (
+                "Could not read the data files, check the files"
+            )
             return
+
         st.session_state.status_text = ""
         st.session_state.active_criteria = criteria
 
-        # restrict to the chosen year, collate, then filter and rate
         year = criteria.selected_year
         month = criteria.selected_month
-        kept_tides, kept_daylight = restrict_to_year(self._tide_records, self._daylight_records, year)
+
+        kept_tides, kept_daylight = restrict_to_year(
+            self._tide_records,
+            self._daylight_records,
+            year,
+        )
+
         unified_data = collate_data(kept_tides, kept_daylight)
+
         af = ActivityFilter()
         match_days = af.filter_and_rate(unified_data, criteria)
+
         st.session_state.active_filter = af
         st.session_state.current_match_days = match_days
 
-        # completeness check, warning if no day matched
         if not match_days:
-            st.session_state.status_text="No matching days for these criteria - try widening them."
+            st.session_state.status_text = (
+                "No matching days for these criteria - try widening them."
+            )
 
-          self.show_screen("calendar_screen")
-          st.rerun()
-          # switch screens immediately, same effect as tkraise()
+        self.show_screen("calendar_screen")
+        st.rerun()
 
-    # Build the calendar screen
     def build_calendar_screen(self):
-          criteria = st.session_state.active_criteria
-          af = st.session_state.active_filter
-          match_days = st.session_state.current_match_days
+        criteria = st.session_state.active_criteria
+        af = st.session_state.active_filter
+        match_days = st.session_state.current_match_days
 
-          topbar = st.columns([4, 1])
-          topbar[0].subheader(MONTHS[criteria.selected_month - 1] + " " + str(criteria.selected_year))
-          if topbar[1].button("Edit criteria"):
+        topbar = st.columns([4, 1])
+
+        topbar[0].subheader(
+            MONTHS[criteria.selected_month - 1]
+            + " "
+            + str(criteria.selected_year)
+        )
+
+        if topbar[1].button("Edit criteria"):
             self.show_screen("criteria_screen")
             st.rerun()
 
-          head = st.colums(7)
-          for i, weekday in enumerate(WEEKDAYS):
-                    head[i].markdown(f"**{weekday}**")
+        head = st.columns(7)
 
-          self._render_calendar(criteria.selected_year, criteria.selected_month, match_days, af)
-          self._build_legend()
+        for i, weekday in enumerate(WEEKDAYS):
+            head[i].markdown(f"**{weekday}**")
 
-    # Draw the month grid from the filtered results
-# using st.columns instead of CTKFrame grid 
+        self._render_calendar(
+            criteria.selected_year,
+            criteria.selected_month,
+            match_days,
+            af,
+        )
+
+        self._build_legend()
 
     def _render_calendar(self, year, month, match_days, af):
         cal = calmod.Calendar(firstweekday=0)
+
         for week in cal.monthdayscalendar(year, month):
             row_cols = st.columns(7)
+
             for c, day in enumerate(week):
                 if day == 0:
-                          continue 
-          date_str = "{:02d}/{:02d}/{}".format(day, month, year)
+                    continue
+
+                date_str = "{:02d}/{:02d}/{}".format(day, month, year)
+
                 if date_str in match_days:
                     info = match_days[date_str]
                     colour, symbol = af.indicator_for(info)
-                    detail = "{}m  {}".format(info["tide_height"], info["tide_time"])
-                    self._draw_cell(row_cols[c], day, colour, symbol, detail)
+                    detail = "{}m {}".format(
+                        info["tide_height"],
+                        info["tide_time"],
+                    )
+                    self._draw_cell(
+                        row_cols[c],
+                        day,
+                        colour,
+                        symbol,
+                        detail,
+                    )
                 else:
-                    self._draw_cell(row_cols[c], day, COLOUR_NO_MATCH, "X", "")
- 
-    # Draw one calendar cell 
-def _draw_cell(self, column, day, colour, symbol, detail):
-with column.container(border=True):
-                     st.markdown(f"**{day}**")
-          if colour == COLOUR_NO_MATCH:
-                               st.badge("No match", colour="gray")
-          else:
-          activity_label = "Surf" if colour == COLOUR_SURF else "Swim"
-          badge_colour = "green" if colour == COLOUR_SURF else "blue"
-                if symbol:  # ideal day 
-                    st.badge(activity_label + " " + STAR, color="orange")
+                    self._draw_cell(
+                        row_cols[c],
+                        day,
+                        COLOUR_NO_MATCH,
+                        "X",
+                        "",
+                    )
+
+    def _draw_cell(self, column, day, colour, symbol, detail):
+        with column.container(border=True):
+            st.markdown(f"**{day}**")
+
+            if colour == COLOUR_NO_MATCH:
+                st.badge("No match", color="gray")
+            else:
+                activity_label = (
+                    "Surf"
+                    if colour == COLOUR_SURF
+                    else "Swim"
+                )
+
+                badge_colour = (
+                    "green"
+                    if colour == COLOUR_SURF
+                    else "blue"
+                )
+
+                if symbol:
+                    st.badge(
+                        activity_label + " " + STAR,
+                        color="orange",
+                    )
                 else:
-                    st.badge(activity_label, color=badge_colour)
+                    st.badge(
+                        activity_label,
+                        color=badge_colour,
+                    )
+
             if detail:
                 st.caption(detail)
 
-# Draw the colour key 
-# badges
+    def _build_legend(self):
+        st.write("")
+        legend = st.columns(5)
 
-def _build_legend(self):
-          st.write("")
-          legend = st.columns(5)
-          legend[0].badge("Surf", color="green"
-          legend[1].badge("Swim", color="blue")
-          legend[2].badge("Both", color="violet")
-          legend[3].badge(STAR + " Ideal", color="orange")
-          legend[4].badge("No match", color="gray")
+        legend[0].badge("Surf", color="green")
+        legend[1].badge("Swim", color="blue")
+        legend[2].badge("Both", color="violet")
+        legend[3].badge(STAR + " Ideal", color="orange")
+        legend[4].badge("No match", color="gray")
 
-# Run app
-def run(self):
-          if st.session_state.current_screen == "criteria_screen":
-                    self.build_criteria_screen()
-          else:
-                    self.build_calendar_screen()
+    def run(self):
+        if st.session_state.current_screen == "criteria_screen":
+            self.build_criteria_screen()
+        else:
+            self.build_calendar_screen()
 
-# create app object and run 
 
 if __name__ == "__main__":
-          st.set_page_config(page_title ="TideTracker", layout="wide")
-TideTrackerApp().run()
+    st.set_page_config(
+        page_title="TideTracker",
+        layout="wide",
+    )
+
+    TideTrackerApp().run()
 
