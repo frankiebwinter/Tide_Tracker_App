@@ -1,17 +1,12 @@
 # TideTracker
-# reads real data from the two CSV files in this folder (won't fully function when run outside of my pycharm folder)
-# The two files attached in the folder are the only ones that can be read
+# reads real data from the two CSV files in this folder
 
-# I REFERRED TO:
-# https://docs.python.org/3/library/calendar.html
-# For information
-
-# I REFERRED TO:
-# my own previous code
-
-# I chose JSON because it stores my mixed criteria (text, numbers, True/False)
-# in a structured, human-readable form that Python can write and read back with one line each
-# (json.dump, json.load), with no parsing code of my own
+# OVERVIEW
+# This application helps users find suitable days for surfing or swimming
+# by filtering tide and daylight data against user-defined criteria
+# Users set preferences (tide height range, time window, daylight conditions)
+# on a criteria screen, then view matching days highlighted on a calendar
+# Results will be able to be saved, loaded, presented in a calendar
 
 # Tide Tracker Application
 # Frankie-Belle Taylor 01/06/2026
@@ -24,15 +19,16 @@
 # Frankie-Belle Taylor 19/06/26
 # Frankie-Belle Taylor 22/06/26
 
-# OVERVIEW
-# This application helps users find suitable days for surfing or swimming
-# by filtering tide and daylight data against user-defined criteria
-# Users set preferences (tide height range, time window, daylight conditions)
-# on a criteria screen, then view matching days highlighted on a calendar
-# A layering feature allows two activities to be compared on the same calendar
-# Results will be able to be saved, loaded (and maybe exported)
+# I REFERRED TO:
+# https://docs.python.org/3/library/calendar.html
+# For information
 
+# I REFERRED TO:
+# my own previous code
 
+# I chose JSON because it stores my mixed criteria (text, numbers, True/False)
+# in a structured, human-readable form that Python can write and read back with one line each
+# (json.dump, json.load), with no parsing code of my own
 
 # DATA SOURCES
 # "Point-Lonsdale_60730_2026.csv" - Bureau of Meteorology tide predictions for Point Lonsdale,
