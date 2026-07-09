@@ -263,10 +263,9 @@ def restrict_to_year(tide_records, daylight_records, selected_year):
     kept_tides = [r for r in tide_records if extract_year(r["date"]) == selected_year]
     kept_daylight = [r for r in daylight_records if extract_year(r["date"]) == selected_year]
     return kept_tides, kept_daylight
-
-
 # Merge the tide and daylight lists into one dictionary keyed by date, so each day carries its sunrise, sunset and all of its tides together
 # A dictionary lookup is built first so matching a tide to its day is fast
+
 def collate_data(tide_records, daylight_records):
     unified_data = {}
     # This is a dictionary comprehension
@@ -335,47 +334,47 @@ class UserCriteria:
             return MONTHS.index(name) + 1
         return None
 
-def read_from_values(
-    self,
-    activity,
-    year,
-    month,
-    tide_min,
-    tide_max,
-    time_from,
-    time_to,
-    sunrise,
-    sunset,
-    after_sunrise,
-    before_sunset,
-):
-    self.activity = activity
-    self.selected_year = self._safe_int(year)
-    self.selected_month = self._safe_month(month)
-    self.tide_min = self._safe_float(tide_min)
-    self.tide_max = self._safe_float(tide_max)
-    self.time_from = self._safe_time(time_from)
-    self.time_to = self._safe_time(time_to)
-    self.is_sunrise = sunrise
-    self.is_sunset = sunset
-    self.is_after_sunrise = after_sunrise
-    self.is_before_sunset = before_sunset
+	def read_from_values(
+              self,
+              activity,
+              year,
+              month,
+              tide_min,
+              tide_max,
+              time_from,
+              time_to,
+              sunrise,
+              sunset,
+              after_sunrise,
+              before_sunset,
+          ):
+              self.activity = activity
+              self.selected_year = self._safe_int(year)
+              self.selected_month = self._safe_month(month)
+              self.tide_min = self._safe_float(tide_min)
+              self.tide_max = self._safe_float(tide_max)
+              self.time_from = self._safe_time(time_from)
+              self.time_to = self._safe_time(time_to)
+              self.is_sunrise = sunrise
+              self.is_sunset = sunset
+              self.is_after_sunrise = after_sunrise
+              self.is_before_sunset = before_sunset
 
     # Copy the GUI values into this object, converting types
-
-    def read_from_screen(self, app):
-        self.activity = app.current_activity
-        self.selected_year = self._safe_int(app.cmb_year.get())
-        self.selected_month = self._safe_month(app.cmb_month.get())
-        self.tide_min = self._safe_float(app.cmb_tide_min.get())
-        self.tide_max = self._safe_float(app.cmb_tide_max.get())
-        self.time_from = self._safe_time(app.cmb_time_from.get())
-        self.time_to = self._safe_time(app.cmb_time_to.get())
-        # BooleanVar.get() already returns a bool
-        self.is_sunrise = app.var_sunrise.get()
-        self.is_sunset = app.var_sunset.get()
-        self.is_after_sunrise = app.var_after_sunrise.get()
-        self.is_before_sunset = app.var_before_sunset.get()
+	
+	    def read_from_screen(self, app):
+	        self.activity = app.current_activity
+	        self.selected_year = self._safe_int(app.cmb_year.get())
+	        self.selected_month = self._safe_month(app.cmb_month.get())
+	        self.tide_min = self._safe_float(app.cmb_tide_min.get())
+	        self.tide_max = self._safe_float(app.cmb_tide_max.get())
+	        self.time_from = self._safe_time(app.cmb_time_from.get())
+	        self.time_to = self._safe_time(app.cmb_time_to.get())
+	        # BooleanVar.get() already returns a bool
+	        self.is_sunrise = app.var_sunrise.get()
+	        self.is_sunset = app.var_sunset.get()
+	        self.is_after_sunrise = app.var_after_sunrise.get()
+	        self.is_before_sunset = app.var_before_sunset.get()
 
     # Returns a list of problem messages
     # empty means all good
@@ -470,17 +469,17 @@ def read_from_values(
 
     # Push the stored values back into the on-screen widgets
     def populate_widgets(self):
-    st.session_state.current_activity = self.activity
-    st.session_state.cmb_year = str(self.selected_year)
-    st.session_state.cmb_month = MONTHS[self.selected_month - 1]
-    st.session_state.cmb_tide_min = "{:.1f}".format(self.tide_min)
-    st.session_state.cmb_tide_max = "{:.1f}".format(self.tide_max)
-    st.session_state.cmb_time_from = self.time_from.strftime("%H:%M")
-    st.session_state.cmb_time_to = self.time_to.strftime("%H:%M")
-    st.session_state.var_sunrise = self.is_sunrise
-    st.session_state.var_sunset = self.is_sunset
-    st.session_state.var_after_sunrise = self.is_after_sunrise
-    st.session_state.var_before_sunset = self.is_before_sunset
+          st.session_state.current_activity = self.activity
+          st.session_state.cmb_year = str(self.selected_year)
+          st.session_state.cmb_month = MONTHS[self.selected_month - 1]
+          st.session_state.cmb_tide_min = "{:.1f}".format(self.tide_min)
+          st.session_state.cmb_tide_max = "{:.1f}".format(self.tide_max)
+          st.session_state.cmb_time_from = self.time_from.strftime("%H:%M")
+          st.session_state.cmb_time_to = self.time_to.strftime("%H:%M")
+          st.session_state.var_sunrise = self.is_sunrise
+          st.session_state.var_sunset = self.is_sunset
+          st.session_state.var_after_sunrise = self.is_after_sunrise
+          st.session_state.var_before_sunset = self.is_before_sunset
 
 # CLASS ActivityFilter
 # Encapsulates the filtering and rating
@@ -555,16 +554,17 @@ class ActivityFilter:
         colour = COLOUR_SURF if self.criteria.activity == "surf" else COLOUR_SWIM
         symbol = STAR if info["is_ideal"] else ""
         return colour, symbol
+              
 class TideTrackerApp:
     def __init__(self):
         # State for whole app
         defaults = {
-            "current_activity": None,
-            "active_criteria": None,
-            "current_match_days": None,
-            "active_filter": None,
-            "current_screen": "criteria_screen",
-            "status_text": "Pick an activity, set your criteria, then Show calendar",
+          "current_activity": None,
+          "active_criteria": None,
+          "current_match_days": None,
+          "active_filter": None,
+          "current_screen": "criteria_screen",
+          "status_text": "Pick an activity, set your criteria, then Show calendar",
           "tide_records": None,
           "daylight_records": None,
         }
@@ -723,16 +723,16 @@ class TideTrackerApp:
             )
 
     def _load_sources(self):
-if st.session_state.tide_records is None:
-    st.session_state.tide_records = load_tide_data(TIDE_FILE)
-
-if st.session_state.daylight_records is None:
-    st.session_state.daylight_records = load_daylight_data(DAYLIGHT_FILE)
-
-return (
-    len(st.session_state.tide_records) > 0
-    and len(st.session_state.daylight_records) > 0
-)
+          if st.session_state.tide_records is None:
+              st.session_state.tide_records = load_tide_data(TIDE_FILE)
+          
+          if st.session_state.daylight_records is None:
+              st.session_state.daylight_records = load_daylight_data(DAYLIGHT_FILE)
+          
+          return (
+              len(st.session_state.tide_records) > 0
+              and len(st.session_state.daylight_records) > 0
+          )
 
     def on_show_calendar(self):
         criteria = self._read_criteria_from_widgets()
@@ -893,7 +893,6 @@ return (
             self.build_calendar_screen()
 
 
-if __name__ == "__main__":
     st.set_page_config(
         page_title="TideTracker",
         layout="wide",
