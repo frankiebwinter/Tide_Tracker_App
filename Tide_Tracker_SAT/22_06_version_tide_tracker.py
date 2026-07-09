@@ -409,6 +409,7 @@ class TideTrackerApp:
             "current_match_days": None,
             "active_filter": None,
             "status_text": "Pick an activity, set your criteria, then Show calendar.",
+            "pending_load": None,
         }
         for key, value in defaults.items():
             if key not in st.session_state:
@@ -424,6 +425,10 @@ class TideTrackerApp:
 
     # Build the criteria screen and all of its controls
     def build_criteria_screen(self):
+        if st.session_state.pending_load is not None:
+            st.session_state.pending_load.populate_widgets()
+            st.session_state.pending_load = None
+                  
         header_col, status_col = st.columns([2, 3])
         header_col.title("Tide Tracker")
         status_col.write("")
@@ -520,7 +525,7 @@ class TideTrackerApp:
         criteria = UserCriteria()
         criteria.activity = st.session_state.current_activity
         if criteria.load():
-            criteria.populate_widgets()
+            st.session_state.pending_load = criteria
             st.session_state.status_text = "Criteria loaded for " + st.session_state.current_activity
             st.rerun()   # refresh so the reloaded widget values show immediately
         else:
