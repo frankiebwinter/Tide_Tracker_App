@@ -1,7 +1,11 @@
-# TideTracker - a Streamlit app that reads tide-height and sunrise/sunset
+# TideTracker
+# a Streamlit app version of a school project that reads tide-height and sunrise/sunset
 # data for 2026, then lets the user filter by activity (surf/swim), tide
 # height, time window, and daylight conditions to see which days match on
-# a calendar.
+# a calendar
+
+# Frankie-Belle Taylor 09/07/26
+# Dervived from previous versions of my TideTracker app project 
 
 import csv
 import os
@@ -204,7 +208,8 @@ class UserCriteria:
         return None
 
     # Copy the current widget values into this object, converting types
-    # and doing the safety checks above along the way.
+    # and doing the safety checks above along the way
+          
     def read_from_values(self, activity, year_text, month_text, tide_min_text, tide_max_text,
                           time_from_text, time_to_text, is_sunrise, is_sunset,
                           is_after_sunrise, is_before_sunset):
@@ -295,8 +300,9 @@ class UserCriteria:
         return True
 
     # Push the stored values back into the widgets by writing into
-    # st.session_state under the same keys the widgets use - Streamlit
-    # widgets pick up their value from session_state on the next rerun.
+    # st.session_state under the same keys the widgets use
+          # Streamlit widgets pick up their value from session_state on the next rerun
+
     def populate_widgets(self):
         st.session_state.current_activity = self.activity
         st.session_state.cmb_year = str(self.selected_year)
@@ -372,13 +378,16 @@ class ActivityFilter:
 
 
 # CLASS TideTrackerApp
-# The main app. Builds the two screens (criteria and calendar), holds the
-# program's shared state in st.session_state, and reacts to button presses.
+# The main app
+# Builds the two screens (criteria and calendar), holds
+# program's shared state in st.session_state, and reacts to button presses
+
 class TideTrackerApp:
     def __init__(self):
-        # state for the whole app, kept in st.session_state so it survives
-        # from one rerun to the next (Streamlit reruns the whole script on
-        # every interaction, so plain instance attributes would reset).
+        # state for the whole app, kept in st.session_state so it lasts
+        # from one rerun to the next
+              # because Streamlit reruns the whole script on every interaction
+              
         defaults = {
             "current_activity": None,
             "current_screen": "criteria_screen",
@@ -449,13 +458,15 @@ class TideTrackerApp:
         if actions[2].button("Show calendar", use_container_width=True, type="primary"):
             self.on_show_calendar()
 
-    # Record which activity is selected - the button colouring above reads
-    # current_activity back out on the next draw to show which is active.
+    # Record which activity is selected, the button colouring above reads
+    # current_activity back out on the next draw to show which is active
+          
     def on_activity_select(self, activity):
         st.session_state.current_activity = activity
 
     # Gather the current widget values from session_state and build a
-    # UserCriteria object from them.
+    # UserCriteria object from them
+          
     def _read_criteria_from_widgets(self):
         criteria = UserCriteria()
         criteria.read_from_values(
@@ -473,7 +484,9 @@ class TideTrackerApp:
         )
         return criteria
 
-    # Save criteria handler - validates first, never saves invalid criteria
+    # Save criteria handler
+          # validates first, never saves invalid criteria
+          
     def on_save_criteria(self):
         criteria = self._read_criteria_from_widgets()
         problems = criteria.validate()
@@ -482,8 +495,10 @@ class TideTrackerApp:
             return
         st.session_state.status_text = criteria.save()
 
-    # Load criteria handler - loads the file for the chosen activity and
-    # fills the widgets with the saved values.
+    # Load criteria handler
+          # loads the file for the chosen activity and
+    # fills the widgets with the saved values
+          
     def on_load_criteria(self):
         if st.session_state.current_activity is None:
             st.session_state.status_text = "Choose Surf or Swim first, then Load criteria."
@@ -498,7 +513,9 @@ class TideTrackerApp:
             st.session_state.status_text = "No saved criteria found for " + st.session_state.current_activity
 
     # Load both data files once per run, so the large tide file isn't
-    # re-read on every button press. Returns True if both are available.
+    # re-read on every button press
+          # Returns True if both are available 
+          
     def _load_sources(self):
         if self._tide_records is None:
             self._tide_records = load_tide_data(TIDE_FILE)
@@ -506,9 +523,9 @@ class TideTrackerApp:
             self._daylight_records = load_daylight_data(DAYLIGHT_FILE)
         return len(self._tide_records) > 0 and len(self._daylight_records) > 0
 
-    # The main flow when "Show calendar" is pressed: validate the
+    # The main flow when "Show calendar" is pressed validate the
     # criteria, load and filter the data, then switch to the calendar
-    # screen.
+    # screen
     def on_show_calendar(self):
         criteria = self._read_criteria_from_widgets()
         problems = criteria.validate()
@@ -537,6 +554,7 @@ class TideTrackerApp:
         st.rerun()   # redraw immediately so the calendar screen shows right away
 
     # Build the calendar screen
+          
     def build_calendar_screen(self):
         criteria = st.session_state.active_criteria
         af = st.session_state.active_filter
@@ -555,7 +573,8 @@ class TideTrackerApp:
         self._render_calendar(criteria.selected_year, criteria.selected_month, match_days, af)
         self._build_legend()
 
-    # Draw the month grid from the filtered results, week by week.
+    # Draw the month grid from the filtered results, week by week
+          
     def _render_calendar(self, year, month, match_days, af):
         cal = calmod.Calendar(firstweekday=0)
         for week in cal.monthdayscalendar(year, month):
@@ -572,8 +591,9 @@ class TideTrackerApp:
                 else:
                     self._draw_cell(row_cols[c], day, COLOUR_NO_MATCH, "X", "")
 
-    # Draw one calendar cell: day number, a coloured badge showing the
-    # activity/status, and the matching tide detail underneath.
+    # Draw one calendar cell
+          # day number, a coloured badge showing the activity, and the matching tide detail underneath 
+          
     def _draw_cell(self, column, day, colour, symbol, detail):
         with column.container(border=True):
             st.markdown(f"**{day}**")
@@ -595,7 +615,6 @@ class TideTrackerApp:
         legend = st.columns(5)
         legend[0].badge("Surf", color="green")
         legend[1].badge("Swim", color="blue")
-        legend[2].badge("Both", color="violet")
         legend[3].badge(STAR + " Ideal", color="orange")
         legend[4].badge("No match", color="gray")
 
