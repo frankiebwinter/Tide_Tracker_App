@@ -646,7 +646,7 @@ class TideTrackerApp:
           "status_text": "Pick an activity, set your criteria, then Show calendar", 
           }
                     
-          for key, value in defaults.items()
+          for key, value in defaults.items():
               if key not in st.session_state:
                         st.session_state[key] = value
 
