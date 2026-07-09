@@ -335,7 +335,7 @@ class UserCriteria:
             return MONTHS.index(name) + 1
         return None
 
-	def read_from_values(self, activity, year, month, tide_min, tide_max, time_from, time_to, sunrise, sunset, after_sunrise, before_sunset,
+    def read_from_values(self, activity, year, month, tide_min, tide_max, time_from, time_to, sunrise, sunset, after_sunrise, before_sunset,
 						):
         self.activity = activity
         self.selected_year = self._safe_int(year)
@@ -351,8 +351,8 @@ class UserCriteria:
 
     # Copy the GUI values into this object, converting types
 	
-	def read_from_screen(self, app):
-	    self.activity = app.current_activity
+    def read_from_screen(self, app):
+		self.activity = app.current_activity
 	    self.selected_year = self._safe_int(app.cmb_year.get())
 	    self.selected_month = self._safe_month(app.cmb_month.get())
 	    self.tide_min = self._safe_float(app.cmb_tide_min.get())
