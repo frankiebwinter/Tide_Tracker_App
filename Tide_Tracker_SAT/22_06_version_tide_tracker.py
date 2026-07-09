@@ -32,69 +32,7 @@
 # A layering feature allows two activities to be compared on the same calendar
 # Results will be able to be saved, loaded (and maybe exported)
 
-# CONTEXT
-# similarly to my pseudocode, I was playing around with Custom Tkinter in my own time with 'for fun' project,
-# I implemented what I learnt for this school project
 
-# NOTES 01/06/26
-# I spent a lot of the double fiddling around with the daylight hour CSVs so didn't get much actual coding done
-# I successfully downloaded CSV of sunrise and sunset times from Geoscience Aus as planned
-# However, I have realised (that I didn't realise in designing) that I need to download the CSV files per individual year
-# The two options for download are for a single day, or annual
-# This will change my 'year selection' button, but I'm not sure quite how it will change yet
-# I may need to download multiple year files so that the user still has a choice, and this will mean I will be
-# dealing with more separate CSV files than I anticipated
-
-# NOTES 01/06/26
-# I spent this time defining all my constants and thinking some things through
-
-# NOTES 05/06/26
-# 05/06 I don't have access to the tide CSVs yet because I can only access these through my dad
-# The tide files are NOT publicly available, so I have to work on some other things like the GUI layout
-# I will hopefully gain access to the CSVs I need next week
-# I have laid out some of the key buttons, checkboxes etc but without any commands yet
-# I will add in the commands later
-# None of this 'works' yet per say, but it is just setting up
-# I have been referring to my pseudocode throughout
-
-# NOTES 15/06/26
-# added in the parsing sections, which I had referenced in my pseudocode but hadn't implemented yet
-# Added to init section of Tide Application Class
-
-# TO BE IMPLEMENTED
-# I don't like how i'v laid things out using the self._card
-# I want to change this and use some other word not card
-# SHOULD I USE Calendar module (import it? import calendar?)
-# Need to work a lot more on calendar section very messy at the moment
-
-# REFLECTION: I have been being a little slow motion with my coding, but I am confident that
-# In coming weeks I will get a lot of fast progress since I have spent so long this week organising things and thinking things through
-
-# Notes 8/06/26 (Referring to a previous version of code, which is in my google drive folder)
-# got my rough draft actually running
-# Previous version would not run at all, because several buttons had empty "command=" arguments, two helper methods (_card, _combo) were
-# used but never written, the calendar helpers were accidentally nested inside another method, and
-# the calendar module was referred to by the wrong name
-# fixed those so the program actually launches
-# launches: the criteria screen shows, the activity buttons work, and "Show calendar" switches to
-
-# Notes 12/06/26 (Referring to previous version of code, which is in my google drive folder)
-# built on my previous version, which got the GUI running but only showed a fixed sample calendar
-# made calendar so it is driven by the user's actual choices: when "Show calendar" is pressed
-# the program reads the criteria, filters some in-memory sample tide data, rates each matching day,
-# and colours the calendar accordingly
-# There are still no data files the tide and daylight data are hardcoded sample values
-
-# NOTES 19/06/26
-# I still have some parts unfinished, like the 'Save' button
-# Like I eliminated the PDF function, I may have to eliminate these features in not finished
-# I finally implemented with actual data sources
-# Because I only got the files from my dad in the last few days I couldn't do this earlier
-# I may be slightly behind because of this delay, and should have sourced the files earlier
-
-# NOTES 22/06/26
-# I implemented the 'save' and 'load' functionalities
-# I just directly implemented these based on my pseudocode, with very few alterations
 
 # DATA SOURCES
 # "Point-Lonsdale_60730_2026.csv" - Bureau of Meteorology tide predictions for Point Lonsdale,
@@ -103,22 +41,6 @@
 # "Aireys_Inlet_Sunrise_and_Sunset.csv" - daily sunrise/sunset times for 2026. Chosen for the
 # same reasons
 # it is the nearest official daylight data for this area of the coast
-
-# DATA TYPES USED
-# String: dates "DD/MM/YYYY", clock times "HH:MM", activity names, GUI labels. Text is used
-# because these are read from a CSV/combo box as text and are easiest to display and compare
-# Numeric int: year, month (1-12), minutes-since-midnight
-# Whole numbers so int is best
-# Numeric float: tide heights in metres
-# Height is fractional so float is best
-# Boolean: the four daylight checkboxes
-# tick is a yes/no value, so bool
-
-# DATA STRUCTURES USED
-# Constants in UPPER_SNAKE_CASE (lists/strings that never change) for colours, month names, etc
-# Arrays for ordered collections of records (every tide reading, every tide event)
-# Dictionaries used as records to keep all the facts about one day or one tide together under
-# named keys
 
 # NAMING CONVENTIONS APPLIED
 # snake_case for variables, functions and methods (e.g. tide_records, load_tide_data)
@@ -129,28 +51,12 @@
 # A leading underscore marks helpers used only inside their own class or this file (e.g. _minutes,
 # _card, _load_sources)
 
-# OBJECT-ORIENTED PRINCIPLES APPLIED
-# Encapsulation: each class keeps its own data and the methods that act on it (UserCriteria holds
-# the user's choices
-# ActivityFilter holds the filtering/rating)
-# Abstraction: small helper methods/functions hide detail behind a clear name
-# Inheritance: TideTrackerApp inherits from customtkinter's CTk window class
-# Also loading, filtering, rating and drawing are separated so each can be changed alone.
-
-# VALIDATION
-# All user input is checked for existence, type and range
-# Also logic checked
-
 import csv
 import os
 import calendar as calmod
 from datetime import datetime
 import streamlit as st
 import json
-
-# appearance settings from the customtkinter docs
-ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("blue")
 
 # GLOBAL CONSTANTS (UPPER_SNAKE_CASE)
 # These never change while the program runs
