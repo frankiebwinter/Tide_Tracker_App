@@ -85,8 +85,10 @@ YEARS = ["2026"]
 STAR = "\u2605"   # str: the star symbol shown on an ideal day
 
 # str constants naming the two data files, kept in one place so they are easy to change.
-TIDE_FILE     = "Point-Lonsdale_60730_2026.csv"
-DAYLIGHT_FILE = "Aireys_Inlet_Sunrise_and_Sunset.csv"
+BASE_DIR = os.path.dirname(__file__)
+
+TIDE_FILE = os.path.join(BASE_DIR, "Point-Lonsdale_60730_2026.csv")
+DAYLIGHT_FILE = os.path.join(BASE_DIR, "Aireys_Inlet_Sunrise_and_Sunset.csv")
 
 # Small fuctions used across the program
 # Pulled out so the logic reads clearly and the
@@ -163,7 +165,7 @@ def load_tide_data(file_path):
     # existence check on the data source
     # if the file is missing, report it and return an empty list rather than crashing
     if not os.path.exists(file_path):
-        print("Tide file not found: " + file_path)
+        st.error("Tide file not found: " + file_path)
         return []
 
     readings = []   # list of date_str, time_str, height in file order
@@ -234,7 +236,7 @@ def load_tide_data(file_path):
 def load_daylight_data(file_path):
     # existence check on the data source.
     if not os.path.exists(file_path):
-        print("Daylight file not found: " + file_path)
+        st.error("Daylight file not found: " + file_path)
         return []
 
     daylight_records = []
@@ -332,6 +334,32 @@ class UserCriteria:
         if name in MONTHS:
             return MONTHS.index(name) + 1
         return None
+
+def read_from_values(
+    self,
+    activity,
+    year,
+    month,
+    tide_min,
+    tide_max,
+    time_from,
+    time_to,
+    sunrise,
+    sunset,
+    after_sunrise,
+    before_sunset,
+):
+    self.activity = activity
+    self.selected_year = self._safe_int(year)
+    self.selected_month = self._safe_month(month)
+    self.tide_min = self._safe_float(tide_min)
+    self.tide_max = self._safe_float(tide_max)
+    self.time_from = self._safe_time(time_from)
+    self.time_to = self._safe_time(time_to)
+    self.is_sunrise = sunrise
+    self.is_sunset = sunset
+    self.is_after_sunrise = after_sunrise
+    self.is_before_sunset = before_sunset
 
     # Copy the GUI values into this object, converting types
 
@@ -441,18 +469,18 @@ class UserCriteria:
         return True
 
     # Push the stored values back into the on-screen widgets
-    def populate_widgets(self, app):
-        app.on_activity_select(self.activity)
-        app.cmb_year.set(str(self.selected_year))
-        app.cmb_month.set(MONTHS[self.selected_month - 1])      # number back to month name
-        app.cmb_tide_min.set("{:.1f}".format(self.tide_min))
-        app.cmb_tide_max.set("{:.1f}".format(self.tide_max))
-        app.cmb_time_from.set(self.time_from.strftime("%H:%M"))
-        app.cmb_time_to.set(self.time_to.strftime("%H:%M"))
-        app.var_sunrise.set(self.is_sunrise)
-        app.var_sunset.set(self.is_sunset)
-        app.var_after_sunrise.set(self.is_after_sunrise)
-        app.var_before_sunset.set(self.is_before_sunset)
+    def populate_widgets(self):
+    st.session_state.current_activity = self.activity
+    st.session_state.cmb_year = str(self.selected_year)
+    st.session_state.cmb_month = MONTHS[self.selected_month - 1]
+    st.session_state.cmb_tide_min = "{:.1f}".format(self.tide_min)
+    st.session_state.cmb_tide_max = "{:.1f}".format(self.tide_max)
+    st.session_state.cmb_time_from = self.time_from.strftime("%H:%M")
+    st.session_state.cmb_time_to = self.time_to.strftime("%H:%M")
+    st.session_state.var_sunrise = self.is_sunrise
+    st.session_state.var_sunset = self.is_sunset
+    st.session_state.var_after_sunrise = self.is_after_sunrise
+    st.session_state.var_before_sunset = self.is_before_sunset
 
 # CLASS ActivityFilter
 # Encapsulates the filtering and rating
@@ -537,15 +565,13 @@ class TideTrackerApp:
             "active_filter": None,
             "current_screen": "criteria_screen",
             "status_text": "Pick an activity, set your criteria, then Show calendar",
+          "tide_records": None,
+          "daylight_records": None,
         }
 
         for key, value in defaults.items():
             if key not in st.session_state:
                 st.session_state[key] = value
-
-        # Loaded once
-        self._tide_records = None
-        self._daylight_records = None
 
     def show_screen(self, screen_name):
         st.session_state.current_screen = screen_name
@@ -697,16 +723,16 @@ class TideTrackerApp:
             )
 
     def _load_sources(self):
-        if self._tide_records is None:
-            self._tide_records = load_tide_data(TIDE_FILE)
+if st.session_state.tide_records is None:
+    st.session_state.tide_records = load_tide_data(TIDE_FILE)
 
-        if self._daylight_records is None:
-            self._daylight_records = load_daylight_data(DAYLIGHT_FILE)
+if st.session_state.daylight_records is None:
+    st.session_state.daylight_records = load_daylight_data(DAYLIGHT_FILE)
 
-        return (
-            len(self._tide_records) > 0
-            and len(self._daylight_records) > 0
-        )
+return (
+    len(st.session_state.tide_records) > 0
+    and len(st.session_state.daylight_records) > 0
+)
 
     def on_show_calendar(self):
         criteria = self._read_criteria_from_widgets()
@@ -730,9 +756,9 @@ class TideTrackerApp:
         month = criteria.selected_month
 
         kept_tides, kept_daylight = restrict_to_year(
-            self._tide_records,
-            self._daylight_records,
-            year,
+              st.session_state.tide_records,
+              st.session_state.daylight_records,
+              year,
         )
 
         unified_data = collate_data(kept_tides, kept_daylight)
