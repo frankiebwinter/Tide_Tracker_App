@@ -336,33 +336,33 @@ class UserCriteria:
         return None
 
 	def read_from_values(self, activity, year, month, tide_min, tide_max, time_from, time_to, sunrise, sunset, after_sunrise, before_sunset,):
-            self.activity = activity
-            self.selected_year = self._safe_int(year)
-            self.selected_month = self._safe_month(month)
-            self.tide_min = self._safe_float(tide_min)
-            self.tide_max = self._safe_float(tide_max)
-            self.time_from = self._safe_time(time_from)
-            self.time_to = self._safe_time(time_to)
-            self.is_sunrise = sunrise
-            self.is_sunset = sunset
-            self.is_after_sunrise = after_sunrise
-            self.is_before_sunset = before_sunset
+        self.activity = activity
+        self.selected_year = self._safe_int(year)
+        self.selected_month = self._safe_month(month)
+        self.tide_min = self._safe_float(tide_min)
+        self.tide_max = self._safe_float(tide_max)
+        self.time_from = self._safe_time(time_from)
+        self.time_to = self._safe_time(time_to)
+        self.is_sunrise = sunrise
+        self.is_sunset = sunset
+        self.is_after_sunrise = after_sunrise
+        self.is_before_sunset = before_sunset
 
     # Copy the GUI values into this object, converting types
 	
-	    def read_from_screen(self, app):
-	        self.activity = app.current_activity
-	        self.selected_year = self._safe_int(app.cmb_year.get())
-	        self.selected_month = self._safe_month(app.cmb_month.get())
-	        self.tide_min = self._safe_float(app.cmb_tide_min.get())
-	        self.tide_max = self._safe_float(app.cmb_tide_max.get())
-	        self.time_from = self._safe_time(app.cmb_time_from.get())
-	        self.time_to = self._safe_time(app.cmb_time_to.get())
+	def read_from_screen(self, app):
+	    self.activity = app.current_activity
+	    self.selected_year = self._safe_int(app.cmb_year.get())
+	    self.selected_month = self._safe_month(app.cmb_month.get())
+	    self.tide_min = self._safe_float(app.cmb_tide_min.get())
+	    self.tide_max = self._safe_float(app.cmb_tide_max.get())
+	    self.time_from = self._safe_time(app.cmb_time_from.get())
+	    self.time_to = self._safe_time(app.cmb_time_to.get())
 	        # BooleanVar.get() already returns a bool
-	        self.is_sunrise = app.var_sunrise.get()
-	        self.is_sunset = app.var_sunset.get()
-	        self.is_after_sunrise = app.var_after_sunrise.get()
-	        self.is_before_sunset = app.var_before_sunset.get()
+	    self.is_sunrise = app.var_sunrise.get()
+	    self.is_sunset = app.var_sunset.get()
+	    self.is_after_sunrise = app.var_after_sunrise.get()
+	    self.is_before_sunset = app.var_before_sunset.get()
 
     # Returns a list of problem messages
     # empty means all good
