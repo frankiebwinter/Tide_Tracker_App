@@ -57,12 +57,12 @@ import json
 # GLOBAL CONSTANTS (UPPER_SNAKE_CASE)
 # These never change while the program runs
 # str data type, a hex colour code is text used by the GUI to paint a cell
-COLOUR_SURF     = "#2e8b57"   # green
-COLOUR_SWIM     = "#2f6fed"   # blue
-COLOUR_BOTH     = "#8a4fff"   # purple
-COLOUR_IDEAL    = "#f5b301"   # gold (kept, but ideal days are shown with a star, not gold)
-COLOUR_NO_MATCH = "#33373e"   # grey
-COLOUR_INACTIVE = "#555a63"   # inactive button grey
+COLOUR_SURF = "#2e8b57"  # green
+COLOUR_SWIM = "#2f6fed"  # blue
+COLOUR_BOTH = "#8a4fff"  # purple
+COLOUR_IDEAL = "#f5b301"  # gold (kept, but ideal days are shown with a star, not gold)
+COLOUR_NO_MATCH = "#33373e"  # grey
+COLOUR_INACTIVE = "#555a63"  # inactive button grey
 
 # list of str: fixed labels reused by the GUI and for converting a month name to its number
 MONTHS = ["January", "February", "March", "April", "May", "June",
@@ -76,19 +76,20 @@ WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 # range(0, 31, 2) gives 0,2,4, etc
 # x / 10 turns those into 0.0 format
 # "{:.1f}".format makes each into text with one decimal place
-TIDES = ["{:.1f}".format(x / 10) for x in range(0, 31, 2)]   # "0.0","0.2",..."3.0"  (x/10 = arithmetic)
+TIDES = ["{:.1f}".format(x / 10) for x in range(0, 31, 2)]  # "0.0","0.2",..."3.0"  (x/10 = arithmetic)
 # one entry per hour 0-23, formatted as two digits plus ":00" ("00:00") etc
 TIMES = ["{:02d}:00".format(h) for h in range(0, 24)]
 # only 2026 is offered because both data files cover 2026 only (range matched to the data).
 YEARS = ["2026"]
 
-STAR = "\u2605"   # str: the star symbol shown on an ideal day
+STAR = "\u2605"  # str: the star symbol shown on an ideal day
 
 # str constants naming the two data files, kept in one place so they are easy to change.
 BASE_DIR = os.path.dirname(__file__)
 
 TIDE_FILE = os.path.join(BASE_DIR, "Point-Lonsdale_60730_2026.csv")
 DAYLIGHT_FILE = os.path.join(BASE_DIR, "Aireys_Inlet_Sunrise_and_Sunset.csv")
+
 
 # Small fuctions used across the program
 # Pulled out so the logic reads clearly and the
@@ -140,6 +141,7 @@ def _minutes(t):
     # so two times can be compared as plain numbers
     return t.hour * 60 + t.minute
 
+
 def find_closest_tide(tide_records, target_time):
     # Return the record whose time is nearest target_time
     # This is the tide rated for the day
@@ -155,6 +157,7 @@ def find_closest_tide(tide_records, target_time):
         key=lambda rec: abs(_minutes(parse_time(rec["time"])) - _minutes(target_time)),
     )
 
+
 # DATA SOURCE FUNCTION: load tide data from the CSV.
 # The file holds one height every 6 minutes
 # that is far more detail than a calendar needs, so this function reduces the readings to the HIGH and LOW tides, which is what a surfer/swimmer actually cares about
@@ -168,7 +171,7 @@ def load_tide_data(file_path):
         st.error("Tide file not found: " + file_path)
         return []
 
-    readings = []   # list of date_str, time_str, height in file order
+    readings = []  # list of date_str, time_str, height in file order
     with open(file_path, newline="") as f:
         # iteration, read the file one line at a time
         for raw_line in f:
@@ -183,9 +186,9 @@ def load_tide_data(file_path):
 
             date_part = stamp[0:10]
             time_part = stamp[11:16]
-            year_txt, month_txt, day_txt = date_part.split("-")   # split the date into 3 parts
-            iso_to_local = day_txt + "/" + month_txt + "/" + year_txt   # rewrite as DD/MM/YYYY
-            readings.append((iso_to_local, time_part, float(value)))    # type conversion
+            year_txt, month_txt, day_txt = date_part.split("-")  # split the date into 3 parts
+            iso_to_local = day_txt + "/" + month_txt + "/" + year_txt  # rewrite as DD/MM/YYYY
+            readings.append((iso_to_local, time_part, float(value)))  # type conversion
 
     # A HIGH tide is a reading higher than the one before and not lower than
     # the one after, a LOW tide is the opposite
@@ -200,21 +203,21 @@ def load_tide_data(file_path):
         next_height = readings[i + 1][2]
         is_high = curr_height > prev_height and curr_height >= next_height
         is_low = curr_height < prev_height and curr_height <= next_height
-        if is_high or is_low:                 # selection
+        if is_high or is_low:  # selection
             date_str, time_str, height = readings[i]
             raw_events.append({
-                "date": date_str,                       # str
-                "time": time_str,                       # str
-                "tide_height": round(height, 2),        # float (rounded to 2 dp)
+                "date": date_str,  # str
+                "time": time_str,  # str
+                "tide_height": round(height, 2),  # float (rounded to 2 dp)
                 # "A if test else B" picks one of two values: "high" when is_high is true, else "low".
-                "kind": "high" if is_high else "low",   # str
+                "kind": "high" if is_high else "low",  # str
             })
 
     # the 6-minute data sometimes wobbles around a bit
     # This pass keeps a clean sequence of low, high
     # My dad suggested doing this restriction
     tide_records = []
-    for event in raw_events:                  # iteration
+    for event in raw_events:  # iteration
         # tide_records[-1] means the last event
         # If it is the same kind, keep only the stronger one instead of both
         if tide_records and tide_records[-1]["kind"] == event["kind"]:
@@ -223,11 +226,12 @@ def load_tide_data(file_path):
             keep_new = (event["kind"] == "high" and event["tide_height"] > last["tide_height"]) or \
                        (event["kind"] == "low" and event["tide_height"] < last["tide_height"])
             if keep_new:
-                tide_records[-1] = event      # replace the weaker same-kind event
+                tide_records[-1] = event  # replace the weaker same-kind event
             # else, ignore the duplicate event
         else:
             tide_records.append(event)
     return tide_records
+
 
 # Data source function
 # load sunrise/sunset data from the CSV
@@ -243,17 +247,18 @@ def load_daylight_data(file_path):
     with open(file_path, newline="") as csv_file:
         # csv.DictReader reads each row into a dictionary keyed by the column headings, so columns can be read by name
         reader = csv.DictReader(csv_file)
-        for row in reader:                    # iteration over the rows
+        for row in reader:  # iteration over the rows
             # The rise_date, set_date columns hold a full date-and-time stamp
             # Only the date and the HH:MM clock time are needed
             rise = datetime.strptime(row["rise_date"], "%Y-%m-%d %H:%M:%S")
             sett = datetime.strptime(row["set_date"], "%Y-%m-%d %H:%M:%S")
             daylight_records.append({
-                "date": rise.strftime("%d/%m/%Y"),       # str
+                "date": rise.strftime("%d/%m/%Y"),  # str
                 "sunrise_time": rise.strftime("%H:%M"),  # str
-                "sunset_time": sett.strftime("%H:%M"),   # str
+                "sunset_time": sett.strftime("%H:%M"),  # str
             })
     return daylight_records
+
 
 # Keep only the records for the chosen year (the data is 2026, but this keeps the design general).
 def restrict_to_year(tide_records, daylight_records, selected_year):
@@ -263,6 +268,8 @@ def restrict_to_year(tide_records, daylight_records, selected_year):
     kept_tides = [r for r in tide_records if extract_year(r["date"]) == selected_year]
     kept_daylight = [r for r in daylight_records if extract_year(r["date"]) == selected_year]
     return kept_tides, kept_daylight
+
+
 # Merge the tide and daylight lists into one dictionary keyed by date, so each day carries its sunrise, sunset and all of its tides together
 # A dictionary lookup is built first so matching a tide to its day is fast
 
@@ -272,21 +279,22 @@ def collate_data(tide_records, daylight_records):
     # it builds a quick lookup table mapping each date to its
     # daylight record, so a day's sunrise/sunset can be found instantly by date instead of searching
     daylight_lookup = {r["date"]: r for r in daylight_records}
-    for tide in tide_records:                 # iteration
+    for tide in tide_records:  # iteration
         date_str = tide["date"]
-        if date_str not in daylight_lookup:   # selection, skip a tide with no daylight entry
+        if date_str not in daylight_lookup:  # selection, skip a tide with no daylight entry
             continue
         if date_str not in unified_data:
             unified_data[date_str] = {
                 "date": date_str,
                 "sunrise_time": daylight_lookup[date_str]["sunrise_time"],
                 "sunset_time": daylight_lookup[date_str]["sunset_time"],
-                "tide_records": [],           # list to collect this day's tides
+                "tide_records": [],  # list to collect this day's tides
             }
         unified_data[date_str]["tide_records"].append(
             {"time": tide["time"], "tide_height": tide["tide_height"]}
         )
     return unified_data
+
 
 # CLASS UserCriteria
 # Encapsulates everything the user can choose
@@ -295,22 +303,22 @@ class UserCriteria:
     def __init__(self):
         # Attributes start empty so "missing" can be told apart from "0"
 
-        self.activity = None          # str  "surf"/"swim"
-        self.selected_year = None     # int
-        self.selected_month = None    # int 1-12
-        self.tide_min = None          # float metres
-        self.tide_max = None          # float metres
-        self.time_from = None         # time
-        self.time_to = None           # time
-        self.is_sunrise = False       # bool
-        self.is_sunset = False        # bool
-        self.is_after_sunrise = False # bool
-        self.is_before_sunset = False # bool
+        self.activity = None  # str  "surf"/"swim"
+        self.selected_year = None  # int
+        self.selected_month = None  # int 1-12
+        self.tide_min = None  # float metres
+        self.tide_max = None  # float metres
+        self.time_from = None  # time
+        self.time_to = None  # time
+        self.is_sunrise = False  # bool
+        self.is_sunset = False  # bool
+        self.is_after_sunrise = False  # bool
+        self.is_before_sunset = False  # bool
 
     # Each tries to convert the text and returns None if it cannot
     # These WERE NOT in my pseudocode, I added them in last minute because I hadn't validated proper;y
     # 19/06/26
-	
+
     def _safe_int(self, text):
         try:
             return int(text)
@@ -335,8 +343,9 @@ class UserCriteria:
             return MONTHS.index(name) + 1
         return None
 
-    def read_from_values(self, activity, year, month, tide_min, tide_max, time_from, time_to, sunrise, sunset, after_sunrise, before_sunset,
-						):
+    def read_from_values(self, activity, year, month, tide_min, tide_max, time_from, time_to, sunrise, sunset,
+                         after_sunrise, before_sunset,
+                         ):
         self.activity = activity
         self.selected_year = self._safe_int(year)
         self.selected_month = self._safe_month(month)
@@ -350,125 +359,130 @@ class UserCriteria:
         self.is_before_sunset = before_sunset
 
     # Copy the GUI values into this object, converting types
-	
-    def read_from_screen(self, app):
-		self.activity = app.current_activity
-	    self.selected_year = self._safe_int(app.cmb_year.get())
-	    self.selected_month = self._safe_month(app.cmb_month.get())
-	    self.tide_min = self._safe_float(app.cmb_tide_min.get())
-	    self.tide_max = self._safe_float(app.cmb_tide_max.get())
-	    self.time_from = self._safe_time(app.cmb_time_from.get())
-	    self.time_to = self._safe_time(app.cmb_time_to.get())
-	        # BooleanVar.get() already returns a bool
-	    self.is_sunrise = app.var_sunrise.get()
-	    self.is_sunset = app.var_sunset.get()
-	    self.is_after_sunrise = app.var_after_sunrise.get()
-	    self.is_before_sunset = app.var_before_sunset.get()
 
-    # Returns a list of problem messages
-    # empty means all good
-    def validate(self):
-        problems = []
+    def read_from_screen(self):
+        self.activity = st.session_state.current_activity
 
-        # Existence and type checks
-        # read_from_screen stored None for anything missing or of the wrong type, so a None here means the value is absent or could not be converted.
-        if self.activity is None:
-            problems.append("Choose Surf or Swim (no activity selected).")
-        if self.selected_year is None:
-            problems.append("Year is missing or not a whole number.")
-        if self.selected_month is None:
-            problems.append("Month is missing or not recognised.")
-        if self.tide_min is None or self.tide_max is None:
-            problems.append("Both tide heights must be set to a number.")
-        if self.time_from is None or self.time_to is None:
-            problems.append("Both From and To times must be valid times.")
+        self.selected_year = self._safe_int(st.session_state.selected_year)
+        self.selected_month = self._safe_month(st.session_state.selected_month)
+        self.tide_min = self._safe_float(st.session_state.tide_min)
+        self.tide_max = self._safe_float(st.session_state.tide_max)
+        self.time_from = self._safe_time(st.session_state.time_from)
+        self.time_to = self._safe_time(st.session_state.time_to)
 
-        # if anything essential is still missing, stop now so the range checks below do not run on a None value
-        if problems:
-            return problems
+        self.is_sunrise = st.session_state.is_sunrise
+        self.is_sunset = st.session_state.is_sunset
+        self.is_after_sunrise = st.session_state.is_after_sunrise
+        self.is_before_sunset = st.session_state.is_before_sunset
 
-        # type check
-        # activity must be exactly one of the two allowed words
-        if self.activity not in ("surf", "swim"):
-            problems.append("Activity must be 'surf' or 'swim'.")
+# Returns a list of problem messages
+# empty means all good
+def validate(self):
+    problems = []
 
-        # range checks
-        if not (1 <= self.selected_month <= 12):
-            problems.append("Month must be between 1 and 12.")
-        if not (0.0 <= self.tide_min <= 3.0) or not (0.0 <= self.tide_max <= 3.0):
-            problems.append("Tide heights must be between 0.0 and 3.0 metres.")
+    # Existence and type checks
+    # read_from_screen stored None for anything missing or of the wrong type, so a None here means the value is absent or could not be converted.
+    if self.activity is None:
+        problems.append("Choose Surf or Swim (no activity selected).")
+    if self.selected_year is None:
+        problems.append("Year is missing or not a whole number.")
+    if self.selected_month is None:
+        problems.append("Month is missing or not recognised.")
+    if self.tide_min is None or self.tide_max is None:
+        problems.append("Both tide heights must be set to a number.")
+    if self.time_from is None or self.time_to is None:
+        problems.append("Both From and To times must be valid times.")
 
-        # logic checks, the values exist and are in range, but must also make sense together
-        if self.tide_min > self.tide_max:
-            problems.append("Minimum tide cannot be greater than maximum tide.")
-        if self.time_from >= self.time_to:
-            problems.append("From time must be earlier than To time.")
-        if self.is_sunrise and self.is_sunset:
-            problems.append("A tide cannot be at sunrise and at sunset at the same time.")
-
+    # if anything essential is still missing, stop now so the range checks below do not run on a None value
+    if problems:
         return problems
 
- # Added on 22/06/26
- # Save the current criteria to a JSON file named after the activity
-    def save(self):
-        # filename built from the activity so surf and swim stay separate
-        file_name = self.activity + "_criteria_saved.json"
-        # every value gathered into one dictionary, times stored as text
-        data = {
-            "activity": self.activity,
-            "selected_year": self.selected_year,
-            "selected_month": self.selected_month,
-            "tide_min": self.tide_min,
-            "tide_max": self.tide_max,
-            "time_from": self.time_from.strftime("%H:%M"),
-            "time_to": self.time_to.strftime("%H:%M"),
-            "is_sunrise": self.is_sunrise,
-            "is_sunset": self.is_sunset,
-            "is_after_sunrise": self.is_after_sunrise,
-            "is_before_sunset": self.is_before_sunset,
-        }
-        # write the file, return a message either way
-        try:
-            with open(file_name, "w") as f:
-                json.dump(data, f, indent=2)
-            return "Criteria saved to " + file_name
-        except OSError:
-            return "Could not save criteria"
+    # type check
+    # activity must be exactly one of the two allowed words
+    if self.activity not in ("surf", "swim"):
+        problems.append("Activity must be 'surf' or 'swim'.")
 
-    # ADDED: load saved criteria for this activity back into the object
-    def load(self):
-        file_name = self.activity + "_criteria_saved.json"
-        # no file means nothing to load, tell the caller to stop
-        if not os.path.exists(file_name):
-            return False
-        with open(file_name) as f:
-            data = json.load(f)
-        self.activity = data["activity"]
-        self.selected_year = data["selected_year"]
-        self.selected_month = data["selected_month"]
-        self.tide_min = data["tide_min"]
-        self.tide_max = data["tide_max"]
-        self.time_from = parse_time(data["time_from"])   # text back into a time
-        self.time_to = parse_time(data["time_to"])
-        self.is_sunrise = data["is_sunrise"]
-        self.is_sunset = data["is_sunset"]
-        self.is_after_sunrise = data["is_after_sunrise"]
-        self.is_before_sunset = data["is_before_sunset"]
-        return True
+    # range checks
+    if not (1 <= self.selected_month <= 12):
+        problems.append("Month must be between 1 and 12.")
+    if not (0.0 <= self.tide_min <= 3.0) or not (0.0 <= self.tide_max <= 3.0):
+        problems.append("Tide heights must be between 0.0 and 3.0 metres.")
 
-    # Push the stored values back into the on-screen widgets
-    def populate_widgets(self):
-          st.session_state.current_activity = self.activity
-          st.session_state.cmb_year = str(self.selected_year)
-          st.session_state.cmb_month = MONTHS[self.selected_month - 1]
-          st.session_state.cmb_tide_min = "{:.1f}".format(self.tide_min)
-          st.session_state.cmb_tide_max = "{:.1f}".format(self.tide_max)
-          st.session_state.cmb_time_from = self.time_from.strftime("%H:%M")
-          st.session_state.cmb_time_to = self.time_to.strftime("%H:%M")
-          st.session_state.var_sunrise = self.is_sunrise
-          st.session_state.var_sunset = self.is_sunset
-          st.session_state.var_after_sunrise = self.is_after_sunrise
-          st.session_state.var_before_sunset = self.is_before_sunset
+    # logic checks, the values exist and are in range, but must also make sense together
+    if self.tide_min > self.tide_max:
+        problems.append("Minimum tide cannot be greater than maximum tide.")
+    if self.time_from >= self.time_to:
+        problems.append("From time must be earlier than To time.")
+    if self.is_sunrise and self.is_sunset:
+        problems.append("A tide cannot be at sunrise and at sunset at the same time.")
+
+    return problems
+
+
+# Added on 22/06/26
+# Save the current criteria to a JSON file named after the activity
+def save(self):
+    # filename built from the activity so surf and swim stay separate
+    file_name = self.activity + "_criteria_saved.json"
+    # every value gathered into one dictionary, times stored as text
+    data = {
+        "activity": self.activity,
+        "selected_year": self.selected_year,
+        "selected_month": self.selected_month,
+        "tide_min": self.tide_min,
+        "tide_max": self.tide_max,
+        "time_from": self.time_from.strftime("%H:%M"),
+        "time_to": self.time_to.strftime("%H:%M"),
+        "is_sunrise": self.is_sunrise,
+        "is_sunset": self.is_sunset,
+        "is_after_sunrise": self.is_after_sunrise,
+        "is_before_sunset": self.is_before_sunset,
+    }
+    # write the file, return a message either way
+    try:
+        with open(file_name, "w") as f:
+            json.dump(data, f, indent=2)
+        return "Criteria saved to " + file_name
+    except OSError:
+        return "Could not save criteria"
+
+
+# ADDED: load saved criteria for this activity back into the object
+def load(self):
+    file_name = self.activity + "_criteria_saved.json"
+    # no file means nothing to load, tell the caller to stop
+    if not os.path.exists(file_name):
+        return False
+    with open(file_name) as f:
+        data = json.load(f)
+    self.activity = data["activity"]
+    self.selected_year = data["selected_year"]
+    self.selected_month = data["selected_month"]
+    self.tide_min = data["tide_min"]
+    self.tide_max = data["tide_max"]
+    self.time_from = parse_time(data["time_from"])  # text back into a time
+    self.time_to = parse_time(data["time_to"])
+    self.is_sunrise = data["is_sunrise"]
+    self.is_sunset = data["is_sunset"]
+    self.is_after_sunrise = data["is_after_sunrise"]
+    self.is_before_sunset = data["is_before_sunset"]
+    return True
+
+
+# Push the stored values back into the on-screen widgets
+def populate_widgets(self):
+    st.session_state.current_activity = self.activity
+    st.session_state.cmb_year = str(self.selected_year)
+    st.session_state.cmb_month = MONTHS[self.selected_month - 1]
+    st.session_state.cmb_tide_min = "{:.1f}".format(self.tide_min)
+    st.session_state.cmb_tide_max = "{:.1f}".format(self.tide_max)
+    st.session_state.cmb_time_from = self.time_from.strftime("%H:%M")
+    st.session_state.cmb_time_to = self.time_to.strftime("%H:%M")
+    st.session_state.var_sunrise = self.is_sunrise
+    st.session_state.var_sunset = self.is_sunset
+    st.session_state.var_after_sunrise = self.is_after_sunrise
+    st.session_state.var_before_sunset = self.is_before_sunset
+
 
 # CLASS ActivityFilter
 # Encapsulates the filtering and rating
@@ -482,11 +496,11 @@ class ActivityFilter:
     def filter_and_rate(self, unified_data, criteria):
         self.criteria = criteria
         results = {}
-        for date_str, day in unified_data.items():        # iteration over each day
-            if extract_month(date_str) != criteria.selected_month:   # selection: wrong month
+        for date_str, day in unified_data.items():  # iteration over each day
+            if extract_month(date_str) != criteria.selected_month:  # selection: wrong month
                 continue
             matched = []
-            for tide in day["tide_records"]:              # iteration over the day's tides
+            for tide in day["tide_records"]:  # iteration over the day's tides
                 tide_time = parse_time(tide["time"])
                 # selection and comparison operators
                 # reject tides outside the range or window
@@ -511,7 +525,7 @@ class ActivityFilter:
                 if criteria.is_sunset and tide_time != sunset:
                     continue
                 matched.append(tide)
-            if matched:                                   # keep the day only if a tide matched
+            if matched:  # keep the day only if a tide matched
                 results[date_str] = {
                     "tide_records": matched,
                     "sunrise_time": day["sunrise_time"],
@@ -531,7 +545,7 @@ class ActivityFilter:
                 "activity": criteria.activity,
                 "tide_height": best["tide_height"],
                 "tide_time": best["time"],
-                "is_ideal": best["tide_height"] >= ideal_threshold,   # bool result of a comparison
+                "is_ideal": best["tide_height"] >= ideal_threshold,  # bool result of a comparison
             }
         return self.match_days
 
@@ -543,19 +557,20 @@ class ActivityFilter:
         colour = COLOUR_SURF if self.criteria.activity == "surf" else COLOUR_SWIM
         symbol = STAR if info["is_ideal"] else ""
         return colour, symbol
-              
+
+
 class TideTrackerApp:
     def __init__(self):
         # State for whole app
         defaults = {
-          "current_activity": None,
-          "active_criteria": None,
-          "current_match_days": None,
-          "active_filter": None,
-          "current_screen": "criteria_screen",
-          "status_text": "Pick an activity, set your criteria, then Show calendar",
-          "tide_records": None,
-          "daylight_records": None,
+            "current_activity": None,
+            "active_criteria": None,
+            "current_match_days": None,
+            "active_filter": None,
+            "current_screen": "criteria_screen",
+            "status_text": "Pick an activity, set your criteria, then Show calendar",
+            "tide_records": None,
+            "daylight_records": None,
         }
 
         for key, value in defaults.items():
@@ -650,9 +665,9 @@ class TideTrackerApp:
             self.on_load_criteria()
 
         if actions[2].button(
-            "Show calendar",
-            use_container_width=True,
-            type="primary",
+                "Show calendar",
+                use_container_width=True,
+                type="primary",
         ):
             self.on_show_calendar()
 
@@ -701,27 +716,27 @@ class TideTrackerApp:
         if criteria.load():
             criteria.populate_widgets()
             st.session_state.status_text = (
-                "Criteria loaded for "
-                + st.session_state.current_activity
+                    "Criteria loaded for "
+                    + st.session_state.current_activity
             )
             st.rerun()
         else:
             st.session_state.status_text = (
-                "No saved criteria found for "
-                + st.session_state.current_activity
+                    "No saved criteria found for "
+                    + st.session_state.current_activity
             )
 
     def _load_sources(self):
-          if st.session_state.tide_records is None:
-              st.session_state.tide_records = load_tide_data(TIDE_FILE)
-          
-          if st.session_state.daylight_records is None:
-              st.session_state.daylight_records = load_daylight_data(DAYLIGHT_FILE)
-          
-          return (
-              len(st.session_state.tide_records) > 0
-              and len(st.session_state.daylight_records) > 0
-          )
+        if st.session_state.tide_records is None:
+            st.session_state.tide_records = load_tide_data(TIDE_FILE)
+
+        if st.session_state.daylight_records is None:
+            st.session_state.daylight_records = load_daylight_data(DAYLIGHT_FILE)
+
+        return (
+                len(st.session_state.tide_records) > 0
+                and len(st.session_state.daylight_records) > 0
+        )
 
     def on_show_calendar(self):
         criteria = self._read_criteria_from_widgets()
@@ -745,9 +760,9 @@ class TideTrackerApp:
         month = criteria.selected_month
 
         kept_tides, kept_daylight = restrict_to_year(
-              st.session_state.tide_records,
-              st.session_state.daylight_records,
-              year,
+            st.session_state.tide_records,
+            st.session_state.daylight_records,
+            year,
         )
 
         unified_data = collate_data(kept_tides, kept_daylight)
@@ -881,11 +896,9 @@ class TideTrackerApp:
         else:
             self.build_calendar_screen()
 
-
     st.set_page_config(
         page_title="TideTracker",
         layout="wide",
     )
 
     TideTrackerApp().run()
-
