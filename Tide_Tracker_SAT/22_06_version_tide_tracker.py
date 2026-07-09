@@ -310,6 +310,7 @@ class UserCriteria:
     # Each tries to convert the text and returns None if it cannot
     # These WERE NOT in my pseudocode, I added them in last minute because I hadn't validated proper;y
     # 19/06/26
+	
     def _safe_int(self, text):
         try:
             return int(text)
@@ -335,30 +336,30 @@ class UserCriteria:
         return None
 
 	def read_from_values(
-              self,
-              activity,
-              year,
-              month,
-              tide_min,
-              tide_max,
-              time_from,
-              time_to,
-              sunrise,
-              sunset,
-              after_sunrise,
-              before_sunset,
+            self,
+            activity,
+            year,
+            month,
+            tide_min,
+            tide_max,
+            time_from,
+            time_to,
+            sunrise,
+            sunset,
+            after_sunrise,
+            before_sunset,
           ):
-              self.activity = activity
-              self.selected_year = self._safe_int(year)
-              self.selected_month = self._safe_month(month)
-              self.tide_min = self._safe_float(tide_min)
-              self.tide_max = self._safe_float(tide_max)
-              self.time_from = self._safe_time(time_from)
-              self.time_to = self._safe_time(time_to)
-              self.is_sunrise = sunrise
-              self.is_sunset = sunset
-              self.is_after_sunrise = after_sunrise
-              self.is_before_sunset = before_sunset
+            self.activity = activity
+            self.selected_year = self._safe_int(year)
+            self.selected_month = self._safe_month(month)
+            self.tide_min = self._safe_float(tide_min)
+            self.tide_max = self._safe_float(tide_max)
+            self.time_from = self._safe_time(time_from)
+            self.time_to = self._safe_time(time_to)
+            self.is_sunrise = sunrise
+            self.is_sunset = sunset
+            self.is_after_sunrise = after_sunrise
+            self.is_before_sunset = before_sunset
 
     # Copy the GUI values into this object, converting types
 	
