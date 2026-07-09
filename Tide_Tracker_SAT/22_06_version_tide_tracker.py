@@ -335,20 +335,7 @@ class UserCriteria:
             return MONTHS.index(name) + 1
         return None
 
-	def read_from_values(
-            self,
-            activity,
-            year,
-            month,
-            tide_min,
-            tide_max,
-            time_from,
-            time_to,
-            sunrise,
-            sunset,
-            after_sunrise,
-            before_sunset,
-          ):
+	def read_from_values(self, activity, year, month, tide_min, tide_max, time_from, time_to, sunrise, sunset, after_sunrise, before_sunset,):
             self.activity = activity
             self.selected_year = self._safe_int(year)
             self.selected_month = self._safe_month(month)
