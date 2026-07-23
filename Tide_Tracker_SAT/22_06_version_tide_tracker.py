@@ -261,7 +261,7 @@ class UserCriteria:
         if not (1 <= self.selected_month <= 12):
             problems.append("Month must be between 1 and 12.")
         if not (0.0 <= self.tide_min <= 3.0) or not (0.0 <= self.tide_max <= 3.0):
-            problems.append("Tide heights must be between 0.0 and 3.0 metres.")
+            problems.append("Tide heights must be between 0.0 and 3.0 .")
 
         if self.tide_min > self.tide_max:
             problems.append("Minimum tide cannot be greater than maximum tide.")
@@ -451,9 +451,9 @@ class TideTrackerApp:
             st.selectbox("Year", YEARS, key="cmb_year")
             st.selectbox("Month", MONTHS, index=2, key="cmb_month")
         with tide_col:
-            st.subheader("Tide (Metres high)")
-            st.selectbox("Minimum", TIDES, index=TIDES.index("0.8"), key="cmb_tide_min")
-            st.selectbox("Maximum", TIDES, index=TIDES.index("1.6"), key="cmb_tide_max")
+            st.subheader("Tide")
+            st.selectbox("Minimum (m) ", TIDES, index=TIDES.index("0.8"), key="cmb_tide_min")
+            st.selectbox("Maximum (m) ", TIDES, index=TIDES.index("1.6"), key="cmb_tide_max")
 
         # Time window card and Daylight conditions card
         time_col, light_col = st.columns(2)
