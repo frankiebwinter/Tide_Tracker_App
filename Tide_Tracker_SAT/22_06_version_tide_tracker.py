@@ -451,7 +451,7 @@ class TideTrackerApp:
             st.selectbox("Year", YEARS, key="cmb_year")
             st.selectbox("Month", MONTHS, index=2, key="cmb_month")
         with tide_col:
-            st.subheader("Tide")
+            st.subheader("Tide (Metres high)")
             st.selectbox("Minimum", TIDES, index=TIDES.index("0.8"), key="cmb_tide_min")
             st.selectbox("Maximum", TIDES, index=TIDES.index("1.6"), key="cmb_tide_max")
 
