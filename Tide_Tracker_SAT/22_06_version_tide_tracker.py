@@ -389,8 +389,6 @@ class ActivityFilter:
         symbol = STAR if info["is_ideal"] else ""
         return colour, symbol
 
-
-
 # CLASS TideTrackerApp
 # The main app
 # Builds the two screens (criteria and calendar), holds
@@ -408,7 +406,8 @@ class TideTrackerApp:
             "active_criteria": None,
             "current_match_days": None,
             "active_filter": None,
-            "status_text": "Pick an activity, set your criteria, then Show calendar.",
+            "status_text": "All data is for Point Lonsdale, VIC, AUS. 
+            Pick an activity, set your criteria, then Show calendar.",
             "pending_load": None,
         }
         for key, value in defaults.items():
