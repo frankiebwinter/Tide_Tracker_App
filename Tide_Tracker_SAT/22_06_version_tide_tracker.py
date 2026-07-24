@@ -406,7 +406,7 @@ class TideTrackerApp:
             "active_criteria": None,
             "current_match_days": None,
             "active_filter": None,
-            "status_text": "All data is for Point Lonsdale, VIC, AUS. 
+            "status_text": "Data sourced from Victoria (Australia) for Point Lonsdale. 
             Pick an activity, set your criteria, then Show calendar.",
             "pending_load": None,
         }
